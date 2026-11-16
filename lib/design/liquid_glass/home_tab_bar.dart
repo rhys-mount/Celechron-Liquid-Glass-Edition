@@ -13,6 +13,15 @@ const _tabs = [
   (icon: CupertinoIcons.settings, label: '设置'),
 ];
 
+double? homeNavigationRailWidth(Size window) {
+  if (window.width < 840 ||
+      window.height < 480 ||
+      window.width <= window.height) {
+    return null;
+  }
+  return window.width >= 1200 ? 176 : 72;
+}
+
 PreferredSizeWidget buildHomeTabBar(
   BuildContext context, {
   required bool useGlass,
@@ -50,4 +59,86 @@ PreferredSizeWidget buildHomeTabBar(
     currentIndex: selectedIndex,
     onTap: onSelected,
   );
+}
+
+class GlassHomeNavigationRail extends StatelessWidget {
+  const GlassHomeNavigationRail({
+    super.key,
+    required this.width,
+    required this.selectedIndex,
+    required this.onSelected,
+  });
+
+  final double width;
+  final int selectedIndex;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = CupertinoTheme.of(context).primaryColor;
+    final showLabels = width >= 120;
+    final unselectedColor = CupertinoColors.label.resolveFrom(context);
+    return GlassContainer(
+      width: width,
+      padding: const EdgeInsets.all(8),
+      shape: const LiquidRoundedSuperellipse(borderRadius: 26),
+      useOwnLayer: true,
+      quality: GlassAppearance.quality,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 4,
+        children: [
+          for (final (index, tab) in _tabs.indexed)
+            Semantics(
+              excludeSemantics: true,
+              label: tab.label,
+              selected: index == selectedIndex,
+              button: true,
+              onTap: () => onSelected(index),
+              child: CupertinoButton(
+                minimumSize: const Size(0, 48),
+                padding: EdgeInsets.zero,
+                color: index == selectedIndex
+                    ? accent.withValues(alpha: 0.14)
+                    : null,
+                borderRadius: BorderRadius.circular(18),
+                onPressed: () => onSelected(index),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Row(
+                      mainAxisAlignment: showLabels
+                          ? MainAxisAlignment.start
+                          : MainAxisAlignment.center,
+                      spacing: 10,
+                      children: [
+                        Icon(
+                          tab.icon,
+                          size: 24,
+                          color:
+                              index == selectedIndex ? accent : unselectedColor,
+                        ),
+                        if (showLabels)
+                          Flexible(
+                            child: Text(
+                              tab.label,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: index == selectedIndex
+                                    ? accent
+                                    : unselectedColor,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -57,17 +58,26 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildPage(BuildContext context, {required bool useGlass}) {
-    final tabBar = buildHomeTabBar(
-      context,
-      useGlass: useGlass,
-      selectedIndex: _indexNum,
-      onSelected: _pageController.jumpToPage,
-    );
+    final media = MediaQuery.of(context);
+    final showNavigation = media.viewInsets.bottom == 0;
+    final railWidth = showNavigation &&
+            useGlass &&
+            defaultTargetPlatform == TargetPlatform.android
+        ? homeNavigationRailWidth(media.size)
+        : null;
+    final tabBar = showNavigation && railWidth == null
+        ? buildHomeTabBar(
+            context,
+            useGlass: useGlass,
+            selectedIndex: _indexNum,
+            onSelected: _pageController.jumpToPage,
+          )
+        : null;
 
     final ScrollBehavior scrollBehavior = ScrollConfiguration.of(context);
     // HeroMode 关闭：原先嵌套 CupertinoTabView 导航器会屏蔽标签页内的 Hero
     // 飞行动画（如学业页成绩卡片），这里显式关闭以保持原有行为
-    Widget content = HeroMode(
+    final content = HeroMode(
       enabled: false,
       child: PageView(
         controller: _pageController,
@@ -92,18 +102,21 @@ class _HomePageState extends State<HomePage> {
     );
 
     // 键盘高度转为内容 Padding。标签栏浮在内容之上，底部留白由各页 SafeArea 消费。
-    final MediaQueryData existingMediaQuery = MediaQuery.of(context);
-    MediaQueryData newMediaQuery =
-        existingMediaQuery.removeViewInsets(removeBottom: true);
-    final EdgeInsets contentPadding =
-        EdgeInsets.only(bottom: existingMediaQuery.viewInsets.bottom);
-
-    final showTabBar = existingMediaQuery.viewInsets.bottom == 0;
-    if (showTabBar) {
-      final double bottomPadding =
-          tabBar.preferredSize.height + existingMediaQuery.padding.bottom;
+    var newMediaQuery = media.removeViewInsets(removeBottom: true);
+    var leadingSpace = 0.0;
+    const railMargin = 12.0;
+    if (tabBar != null) {
+      final bottomPadding = tabBar.preferredSize.height + media.padding.bottom;
       newMediaQuery = newMediaQuery.copyWith(
         padding: newMediaQuery.padding.copyWith(bottom: bottomPadding),
+      );
+    } else if (railWidth != null) {
+      final rtl = Directionality.of(context) == TextDirection.rtl;
+      final safeInset = rtl ? media.padding.right : media.padding.left;
+      leadingSpace = railWidth + railMargin * 2 + safeInset;
+      newMediaQuery = newMediaQuery.removePadding(
+        removeLeft: !rtl,
+        removeRight: rtl,
       );
     }
 
@@ -116,14 +129,41 @@ class _HomePageState extends State<HomePage> {
           // 内容在下层，半透明标签栏的 BackdropFilter 才有内容可模糊
           MediaQuery(
             data: newMediaQuery,
-            child: Padding(padding: contentPadding, child: content),
+            child: Padding(
+              padding: EdgeInsetsDirectional.only(
+                start: leadingSpace,
+                bottom: media.viewInsets.bottom,
+              ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: railWidth == null ? double.infinity : 1040,
+                  ),
+                  child: content,
+                ),
+              ),
+            ),
           ),
-          if (showTabBar)
+          if (tabBar != null)
             Align(
               alignment: Alignment.bottomCenter,
               child: useGlass
                   ? SafeArea(top: false, child: tabBar)
                   : MediaQuery.withNoTextScaling(child: tabBar),
+            ),
+          if (railWidth != null)
+            Align(
+              alignment: AlignmentDirectional.topStart,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(railMargin),
+                  child: GlassHomeNavigationRail(
+                    width: railWidth,
+                    selectedIndex: _indexNum,
+                    onSelected: _pageController.jumpToPage,
+                  ),
+                ),
+              ),
             ),
         ],
       ),
