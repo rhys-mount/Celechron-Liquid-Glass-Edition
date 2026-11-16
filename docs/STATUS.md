@@ -1,6 +1,6 @@
 # Celechron Liquid Glass Edition 项目状态
 
-更新日期为 2026 年 11 月 16 日（北京时间）。2A 原版 Android 基线已通过，进入 Edition 工程基础与底栏 MVP。
+更新日期为 2026 年 11 月 16 日（北京时间）。2A 原版 Android 基线已通过。底栏 MVP 的 Android 功能检查已完成，正在优化光栅开销。
 
 ## 文档依据
 
@@ -18,12 +18,17 @@
 | 第一阶段工程检查 | 原版五个主页面、GetX／Hive 架构、导航生命周期和 Android Edge-to-Edge 已做源码审查。Flutter 3.47.4、Dart 3.13.3、Temurin JDK 17、Android SDK 和项目 Gradle 8.13 Wrapper 已检查。已有 `Medium_Phone` AVD，第一阶段尚未运行应用。 [技术审查记录](IMPLEMENTATION_PLAN.md) |
 | 原版依赖、分析与测试 | 第一阶段 `flutter pub get` 成功，`flutter analyze --no-pub --no-fatal-infos` 退出 0，含 21 条既有 info。排除回环代理干扰后，119 项原版测试全部通过。本轮复核了留存日志。 |
 | Liquid Glass 技术检查 | 首选依赖 `liquid_glass_widgets 1.17.4` 已完成发布归档校验、依赖解析预演和 5 个 Shader 的 Android 目标离线编译。实际 APK 集成、GPU 渲染、画质降级和性能仍待设备验证。 |
+| Edition 工程基础 | `feat/edition-foundation` 的 `4997916` 固定原版依赖锁并添加 Edition 的分析、测试与 Debug APK 工作流。已在本机通过离线锁文件解析校验。 |
+| 底栏 MVP | `feat/liquid-glass-tab-bar` 的 `49ac056` 接入悬浮底栏、浅色求是蓝和默认开启的持久化外观开关。保留原五页与导航状态配置。共 121 项测试通过，静态分析退出 0，仍有上游原有 21 条 Info。iOS 26 起点和 iOS 27 对照 APK 均已构建。API 36 已显示 iOS 26 底栏，日志确认 Impeller OpenGLES 和玻璃库初始化成功。 |
+| Android 运行检查 | API 36 验证五页点按和滑动、当前标签保留、关闭后即时回退、冷启动持久化、重新开启、深浅色、设置末项及滚动状态、详情页返回。API 37.1 验证关闭 Impeller 后仍可启动，以及三键导航和任务编辑键盘。iOS 26／27 在同一 API 36 设备留存深浅对照。截图和语义树位于本地 `.local/mvp/`。 |
+| Profile 试验 | 同一 API 37.1 x86_64 模拟器、同一个 iOS 26 Profile APK 对照反复切页。玻璃栏 UI／Raster P95 为 4.01／60.59 ms，Cupertino 回退为 3.97／4.75 ms。原始 Flutter 时间线和统计位于本地 `.local/mvp/profile-*-tabs.json` 和 `.local/mvp/profile-tab-timing.json`。 |
 | 文档整理 | 将 `IMPLEMENTATION_PLAN.md.md` 改为 `IMPLEMENTATION_PLAN.md`，SHA-256 校验确认内容一致。完成文档对照并初始化本页。 |
 
 ## 未完成事项
 
 - Edition 的远端分支、PR 和 GitHub Actions 运行尚待验证。原版 App 的登录态校园业务与 Android 真机仍待回归。
-- Liquid Glass 底栏 MVP 及其回退尚未实现。顶部导航、五页与二级页面改造、求是蓝主题、总开关持久化、过期横幅移除、关于页署名、图标、启动页、平板适配和 Release 流程均待实施。
+- **当前卡点是底栏光栅耗时。** 模拟器切页时玻璃栏 182 帧中有 179 帧的 Raster 阶段超过 16.7 ms。先试验降低选中态遮罩成本并复测。真机持续滚动、默认画质和正式预设仍待验证。
+- 顶部导航、五页与二级页面的进一步视觉改造、过期横幅移除、关于页署名、图标、启动页、平板适配和 Release 流程均待实施。
 - iOS 26／27 预设、设备默认画质、深色强调色的精确值、`GlassScaffold` 使用范围、平板断点及 Sidebar／Split View 实现仍待验证或定案。`#5B9BEE` 是深色候选值。
 
 ## 文档核对结果
@@ -39,5 +44,5 @@
 
 ## 下一阶段任务
 
-1. **验证 Edition 工程基础。** 检查原版依赖锁与 Edition CI 配置，并提交独立变更。
-2. **验证底部 Tab Bar MVP。** 保持「接下来 → 日程 → 任务 → 学业 → 设置」、原有 `PageView`、页面保活和根 Navigator。对照 iOS 26／27 候选，验证应用主题三态、系统栏、键盘、列表末项、手势、着色器降级和总开关回退。设备结果确认后，再按页推进具体视觉改造。
+1. **优化底栏并重新采样。** 使用同一 Profile 和设备对比已记录的基线，检查 UI／Raster 帧时间、选中态表现和无 Impeller 回退。
+2. **分批改造页面。** 达到底栏验收要求后从「接下来」开始。保留重新规划和状态更新，仅移除已确认的过期提示横幅，逐页提交并回归测试。

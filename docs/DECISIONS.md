@@ -13,3 +13,9 @@ API 36 验收使用同样隔离的 `Celechron_Isolated_API_36`（`emulator-5566`
 采用 Flutter 3.47.4、JDK 17、Gradle 8.14.5 与 Kotlin／Compose 插件 2.2.20。原版构建日志确认 Gradle 8.13 未达到 Flutter 校验下限。保留 AGP 8.13.2、应用身份与最低 API 28。Gradle Wrapper 使用官方发行地址和 SHA-256，构建分支与官方 `main` 分开。
 
 本机的依赖下载通过进程级配置让 Maven Central、Google Maven 和 Flutter Maven 存储直连。由于官方 Gradle 下载重定向在本机被拒绝，首次使用镜像预取，按官网 SHA-256 核对后放入同 URL 对应的 Wrapper 缓存。项目配置继续指向官方地址。
+
+## 2026-11-16 · 底栏试验与回退
+
+底栏接入保留现有 `HomePage`、`PageController`、五页实例和根导航。玻璃栏和 Cupertino 栏共用五个标签和回调。外观开关使用已有 Hive 设置盒内的一条新布尔键，缺省开启，关闭时在原位置切回 Cupertino。
+
+MVP 用 iOS 26 材质作为试验起点，用 `--dart-define=CELECHRON_GLASS_IOS27=true` 构造 iOS 27 对照。底栏试验采用 Standard，运行时 Shader 滤镜不可用则尝试 Minimal，预载异常时使用 Cupertino。正式材质、画质与深色强调色继续按设备验收决定。
