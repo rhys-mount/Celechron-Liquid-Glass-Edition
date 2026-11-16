@@ -4,6 +4,8 @@ import 'package:celechron/http/zjuServices/exceptions.dart';
 import 'package:celechron/utils/platform_features.dart';
 import 'package:extended_sliver/extended_sliver.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+import 'package:celechron/design/liquid_glass/glass_appearance.dart';
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -141,6 +143,68 @@ class ScholarPage extends StatelessWidget {
 
   final _scholarController = Get.put(ScholarController());
   final ValueNotifier<bool> _isRefreshing = ValueNotifier(false);
+
+  Widget _buildSearchLauncher(BuildContext context) {
+    const label = '搜索课程、事项...';
+    void openSearch() {
+      FocusManager.instance.primaryFocus?.unfocus();
+      Navigator.of(context, rootNavigator: true).push(
+        CupertinoPageRoute(builder: (context) => SearchPage()),
+      );
+    }
+
+    final textStyle = CupertinoTheme.of(context)
+        .textTheme
+        .textStyle
+        .copyWith(height: 1.25, fontSize: 18);
+    final cupertino = CupertinoSearchTextField(
+      placeholder: label,
+      placeholderStyle: textStyle.copyWith(color: CupertinoColors.systemGrey),
+      style: textStyle,
+      borderRadius: BorderRadius.circular(12),
+      itemColor: CupertinoColors.systemGrey,
+      itemSize: 20,
+      suffixInsets: const EdgeInsetsDirectional.fromSTEB(0, 0, 5, 0),
+      prefixInsets: const EdgeInsetsDirectional.fromSTEB(10, 0, 0, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+      onTap: openSearch,
+      focusNode: AlwaysDisabledFocusNode(),
+    );
+    if (!Get.isRegistered<GlassAppearance>()) return cupertino;
+    final appearance = Get.find<GlassAppearance>();
+    if (!appearance.available) return cupertino;
+
+    return Obx(() {
+      if (!appearance.enabled.value) return cupertino;
+      final color = CupertinoColors.secondaryLabel.resolveFrom(context);
+      return GlassButton.custom(
+        onTap: openSearch,
+        label: label,
+        shape: const LiquidRoundedRectangle(borderRadius: 18),
+        useOwnLayer: true,
+        quality: GlassAppearance.quality,
+        child: ExcludeSemantics(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: [
+                Icon(CupertinoIcons.search, size: 20, color: color),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: textStyle.copyWith(color: color),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    });
+  }
 
   // 让页内横向列表在桌面端也响应鼠标拖动。外层 PageView 为支持鼠标切页开启了
   // 鼠标拖动，横向列表若不响应鼠标，拖动会漏到 PageView 上造成误切页；
@@ -786,39 +850,7 @@ class ScholarPage extends StatelessWidget {
                           .copyWith(fontSize: 24),
                     ),
                     const SizedBox(width: 12),
-                    Expanded(
-                      child: CupertinoSearchTextField(
-                        placeholder: '搜索课程、事项...',
-                        placeholderStyle: CupertinoTheme.of(context)
-                            .textTheme
-                            .textStyle
-                            .copyWith(
-                                color: CupertinoColors.systemGrey,
-                                height: 1.25,
-                                fontSize: 18),
-                        style: CupertinoTheme.of(context)
-                            .textTheme
-                            .textStyle
-                            .copyWith(height: 1.25, fontSize: 18),
-                        borderRadius: BorderRadius.circular(12),
-                        itemColor: CupertinoColors.systemGrey,
-                        itemSize: 20,
-                        suffixInsets:
-                            const EdgeInsetsDirectional.fromSTEB(0, 0, 5, 0),
-                        prefixInsets:
-                            const EdgeInsetsDirectional.fromSTEB(10, 0, 0, 0),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 8),
-                        onTap: () async {
-                          FocusManager.instance.primaryFocus?.unfocus();
-                          Navigator.of(context, rootNavigator: true).push(
-                              CupertinoPageRoute(
-                                  builder: (context) => SearchPage()));
-                        },
-                        focusNode: AlwaysDisabledFocusNode(),
-                        // Do not popup the keyboard
-                      ),
-                    ),
+                    Expanded(child: _buildSearchLauncher(context)),
                     if (PlatformFeatures.isDesktop)
                       ValueListenableBuilder(
                           valueListenable: _isRefreshing,
