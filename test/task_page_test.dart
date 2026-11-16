@@ -6,6 +6,7 @@ import 'package:celechron/model/period.dart';
 import 'package:celechron/model/scholar.dart';
 import 'package:celechron/model/task.dart';
 import 'package:celechron/page/flow/flow_controller.dart';
+import 'package:celechron/page/flow/flow_view.dart';
 import 'package:celechron/page/task/task_controller.dart';
 import 'package:celechron/page/task/task_edit_page.dart';
 import 'package:celechron/page/task/task_view.dart';
@@ -97,7 +98,7 @@ void main() {
 
   // TaskPage 构造出的两个 GetxController 各有一个每秒定时器。flutter_test 在测试体
   // 结束时就会检查 pending timer，晚于 tearDown，所以必须在测试体内部停掉。
-  void stopTaskPageTimers() {
+  void stopPageTimers() {
     if (Get.isRegistered<TaskController>()) {
       Get.find<TaskController>().onClose();
     }
@@ -106,14 +107,14 @@ void main() {
     }
   }
 
-  Future<void> runTaskPageTest(
+  Future<void> runPageTest(
     WidgetTester tester,
     Future<void> Function() body,
   ) async {
     try {
       await body();
     } finally {
-      stopTaskPageTimers();
+      stopPageTimers();
     }
   }
 
@@ -149,8 +150,37 @@ void main() {
     await pumpFor(tester, const Duration(milliseconds: 700));
   }
 
+  testWidgets('规划过期时仍可从顶部重新规划', (tester) async {
+    await runPageTest(tester, () async {
+      Get.find<Rx<DateTime>>(tag: 'flowListLastUpdate').value =
+          DateTime.fromMillisecondsSinceEpoch(0);
+      await tester.pumpWidget(CupertinoApp(
+        navigatorKey: Get.key,
+        home: FlowPage(),
+      ));
+
+      expect(Get.find<FlowController>().isFlowListOutdated(), isTrue);
+      expect(find.text('规划方案已过期'), findsNothing);
+      expect(find.text('今日无事可做'), findsOneWidget);
+
+      final semantics = tester.ensureSemantics();
+      try {
+        await tester.pump();
+        await tester.tap(find.bySemanticsLabel('重新规划'));
+      } finally {
+        semantics.dispose();
+      }
+      await pumpFor(tester, const Duration(milliseconds: 500));
+      expect(find.text('开始规划'), findsOneWidget);
+      await tester.tap(find.text('返回'));
+      await pumpFor(tester, const Duration(milliseconds: 500));
+      expect(find.text('开始规划'), findsNothing);
+      expect(Get.find<FlowController>().isFlowListOutdated(), isTrue);
+    });
+  });
+
   testWidgets('空状态在新增任务后应当消失', (tester) async {
-    await runTaskPageTest(tester, () async {
+    await runPageTest(tester, () async {
       await pumpTaskPage(tester);
       expect(find.text('没有任务'), findsOneWidget);
 
@@ -163,7 +193,7 @@ void main() {
   });
 
   testWidgets('清空任务后应当重新出现空状态', (tester) async {
-    await runTaskPageTest(tester, () async {
+    await runPageTest(tester, () async {
       taskList.add(_testTask(summary: '删除功能'));
       await pumpTaskPage(tester);
       expect(find.text('没有任务'), findsNothing);
@@ -177,7 +207,7 @@ void main() {
   });
 
   testWidgets('从卡片进入编辑页点“删除任务”应当删除任务', (tester) async {
-    await runTaskPageTest(tester, () async {
+    await runPageTest(tester, () async {
       taskList.add(_testTask(summary: '删除功能'));
       await pumpTaskPage(tester);
 
@@ -196,7 +226,7 @@ void main() {
   });
 
   testWidgets('左滑删除仍然有效（与编辑页删除共用实现）', (tester) async {
-    await runTaskPageTest(tester, () async {
+    await runPageTest(tester, () async {
       taskList.add(_testTask(summary: '删除功能'));
       await pumpTaskPage(tester);
 
@@ -209,7 +239,7 @@ void main() {
   });
 
   testWidgets('对照组：编辑页点“删除任务”确实会返回 status=deleted 的任务', (tester) async {
-    await runTaskPageTest(tester, () async {
+    await runPageTest(tester, () async {
       final task = _testTask(summary: '删除功能');
       Task? popped;
 

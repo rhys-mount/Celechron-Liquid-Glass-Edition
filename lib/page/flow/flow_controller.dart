@@ -87,7 +87,7 @@ class FlowController extends GetxController {
 
   void updateDeadlineListTime() {
     flowListLastUpdate.value = taskListLastUpdate.value.copyWith();
-    // “规划方案已过期”横幅的忽略操作只走这里，需立即持久化，重启后横幅才不会复现
+    // 同步规划时间后立即持久化，让重启后的过期判断使用同一时间。
     _db.setFlowListUpdateTime(flowListLastUpdate.value);
   }
 

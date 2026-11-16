@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
@@ -13,6 +15,10 @@ class GlassAppearance {
   static const theme = bool.fromEnvironment('CELECHRON_GLASS_IOS27')
       ? GlassThemeData.ios27()
       : GlassThemeData.ios26();
+
+  static GlassQuality get quality => ImageFilter.isShaderFilterSupported
+      ? GlassQuality.standard
+      : GlassQuality.minimal;
 
   final Box _options;
   final bool available;

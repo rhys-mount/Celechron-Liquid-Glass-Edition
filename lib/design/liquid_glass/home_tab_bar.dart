@@ -1,9 +1,9 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart' show Icons;
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+
+import 'glass_appearance.dart';
 
 const _tabs = [
   (icon: CupertinoIcons.time, label: '接下来'),
@@ -33,9 +33,7 @@ PreferredSizeWidget buildHomeTabBar(
       maskingQuality: defaultTargetPlatform == TargetPlatform.android
           ? MaskingQuality.off
           : MaskingQuality.high,
-      quality: ImageFilter.isShaderFilterSupported
-          ? GlassQuality.standard
-          : GlassQuality.minimal,
+      quality: GlassAppearance.quality,
     );
   }
   return CupertinoTabBar(

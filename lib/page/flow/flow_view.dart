@@ -2,10 +2,11 @@ import 'dart:async';
 import 'dart:math';
 import 'package:celechron/design/custom_colors.dart';
 import 'package:celechron/design/custom_decoration.dart';
+import 'package:celechron/design/liquid_glass/navigation_action.dart';
 import 'package:celechron/utils/time_helper.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart' show Divider;
 import 'package:get/get.dart';
-import 'package:flutter/material.dart';
 import 'package:celechron/database/database_helper.dart';
 import 'package:celechron/model/period.dart';
 import 'package:celechron/utils/utils.dart';
@@ -579,58 +580,14 @@ class FlowPage extends StatelessWidget {
               largeTitle: const Text('接下来'),
               stretch: true,
               border: null,
-              trailing: // Two buttons in the nav bar.
-                  Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    child: const Icon(
-                      CupertinoIcons.refresh_circled,
-                      semanticLabel: 'Add',
-                    ),
-                    onPressed: () async {
-                      await newFlowList(context);
-                      _flowController.flowList.refresh();
-                    },
-                  ),
-                ],
+              trailing: NavigationAction(
+                icon: CupertinoIcons.refresh_circled,
+                label: '重新规划',
+                onPressed: () async {
+                  await newFlowList(context);
+                  _flowController.flowList.refresh();
+                },
               ),
-            ),
-            SliverToBoxAdapter(
-              child: Obx(() {
-                if (_flowController.isFlowListOutdated()) {
-                  return MaterialBanner(
-                    backgroundColor: CupertinoDynamicColor.resolve(
-                        CupertinoColors.secondarySystemBackground, context),
-                    dividerColor: Colors.transparent,
-                    content: const Text('规划方案已过期'),
-                    contentTextStyle: TextStyle(
-                      fontSize: 16,
-                      color:
-                          CupertinoTheme.of(context).textTheme.textStyle.color!,
-                    ),
-                    leading:
-                        const Icon(CupertinoIcons.exclamationmark_triangle),
-                    actions: [
-                      CupertinoButton(
-                        child: const Text('忽略'),
-                        onPressed: () {
-                          _flowController.updateDeadlineListTime();
-                        },
-                      ),
-                      CupertinoButton(
-                        onPressed: () async {
-                          await newFlowList(context);
-                          _flowController.flowList.refresh();
-                        },
-                        child: const Text('重新规划'),
-                      ),
-                    ],
-                  );
-                }
-                return const SizedBox();
-              }),
             ),
             Obx(
               () {
