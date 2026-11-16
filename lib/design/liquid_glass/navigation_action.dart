@@ -12,16 +12,32 @@ class NavigationAction extends StatelessWidget {
     required this.onPressed,
   });
 
-  final IconData icon;
+  const NavigationAction.text({
+    super.key,
+    required this.label,
+    required this.onPressed,
+  }) : icon = null;
+
+  final IconData? icon;
   final String label;
   final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
+    final actionIcon = icon;
+    final text = actionIcon == null
+        ? Text(
+            label,
+            style: TextStyle(
+              fontSize: 18,
+              color: CupertinoTheme.of(context).primaryColor,
+            ),
+          )
+        : null;
     final cupertino = CupertinoButton(
       padding: EdgeInsets.zero,
       onPressed: onPressed,
-      child: Icon(icon, semanticLabel: label),
+      child: text ?? Icon(actionIcon, semanticLabel: label),
     );
     if (!Get.isRegistered<GlassAppearance>()) return cupertino;
 
@@ -30,8 +46,25 @@ class NavigationAction extends StatelessWidget {
 
     return Obx(() {
       if (!appearance.enabled.value) return cupertino;
+      if (text != null) {
+        return GlassButton.custom(
+          onTap: onPressed ?? () {},
+          enabled: onPressed != null,
+          label: label,
+          height: 44,
+          shape: const LiquidRoundedRectangle(borderRadius: 22),
+          useOwnLayer: true,
+          quality: GlassAppearance.quality,
+          child: ExcludeSemantics(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: text,
+            ),
+          ),
+        );
+      }
       return GlassIconButton(
-        icon: Icon(icon),
+        icon: Icon(actionIcon),
         semanticLabel: label,
         onPressed: onPressed,
         useOwnLayer: true,
