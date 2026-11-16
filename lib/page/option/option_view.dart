@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import 'package:celechron/utils/utils.dart';
 import 'package:celechron/model/option.dart';
 import 'package:celechron/design/cupertino_async_switch.dart';
+import 'package:celechron/design/liquid_glass/glass_appearance.dart';
 
 import 'allow_time_edit_page.dart';
 import 'course_id_mapping_edit_page.dart';
@@ -36,6 +37,7 @@ class OptionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appearance = Get.find<GlassAppearance>();
     var trailingTextStyle = TextStyle(
         color: CupertinoDynamicColor.resolve(
             CupertinoColors.secondaryLabel, context),
@@ -378,6 +380,48 @@ class OptionPage extends StatelessWidget {
                             _optionController.showExportDialog(context),
                       ),
                     ]))),
+            if (appearance.available)
+              SliverToBoxAdapter(
+                child: CupertinoListSection.insetGrouped(
+                  additionalDividerMargin: 2,
+                  margin: _defaultMargin,
+                  header: Padding(
+                    padding: const EdgeInsets.only(left: 16),
+                    child: Text('外观', style: headerFooterTextStyle),
+                  ),
+                  children: [
+                    CupertinoListTile(
+                      title: const Text('Liquid Glass'),
+                      trailing: Obx(
+                        () => CupertinoAsyncSwitch(
+                          value: appearance.enabled.value,
+                          onChanged: (value) async {
+                            try {
+                              await appearance.setEnabled(value);
+                            } on Object {
+                              if (!context.mounted) return;
+                              await showCupertinoDialog<void>(
+                                context: context,
+                                builder: (dialogContext) =>
+                                    CupertinoAlertDialog(
+                                  title: const Text('无法保存外观设置'),
+                                  actions: [
+                                    CupertinoDialogAction(
+                                      onPressed: () =>
+                                          Navigator.pop(dialogContext),
+                                      child: const Text('确定'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             // 工具
             SliverToBoxAdapter(
                 child: CupertinoListSection.insetGrouped(

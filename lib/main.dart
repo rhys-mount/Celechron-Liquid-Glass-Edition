@@ -10,7 +10,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:app_links/app_links.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
+import 'package:celechron/design/liquid_glass/glass_appearance.dart';
 import 'package:celechron/model/scholar.dart';
 import 'package:celechron/model/option.dart';
 import 'package:celechron/page/home_page.dart';
@@ -41,6 +43,7 @@ void main() async {
   Get.put(db.getFlowListUpdateTime().obs, tag: 'flowListLastUpdate');
   Get.put(db.getOption(), tag: 'option');
   Get.put(db.getFuse().obs, tag: 'fuse');
+  Get.put(await GlassAppearance.load(db.optionsBox));
 
   runApp(const CelechronApp());
 
@@ -153,6 +156,10 @@ class _CelechronAppState extends State<CelechronApp>
                     : Brightness.light,
             scaffoldBackgroundColor: CupertinoColors.systemBackground,
             barBackgroundColor: CupertinoColors.systemBackground,
+            primaryColor: CupertinoDynamicColor.withBrightness(
+              color: const Color(0xFF003F88),
+              darkColor: CupertinoColors.activeBlue.darkColor,
+            ),
           ),
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
@@ -166,7 +173,10 @@ class _CelechronAppState extends State<CelechronApp>
           locale: const Locale('zh'),
           builder: (context, child) => MediaQuery(
             data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-            child: child!,
+            child: LiquidGlassWidgets.wrap(
+              theme: GlassAppearance.theme,
+              child: child!,
+            ),
           ),
           title: 'Celechron',
           home: const HomePage(title: 'Celechron'),
