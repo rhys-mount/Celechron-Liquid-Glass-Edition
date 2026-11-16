@@ -135,7 +135,7 @@ class LoginForm extends StatelessWidget {
                         },
                         color: buttonPressed.value
                             ? CupertinoColors.inactiveGray
-                            : CupertinoColors.activeBlue,
+                            : CupertinoTheme.of(context).primaryColor,
                         child: SizedBox(
                           height: 24,
                           width: 60,

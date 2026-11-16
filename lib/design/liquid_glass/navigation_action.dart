@@ -10,17 +10,20 @@ class NavigationAction extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onPressed,
+    this.fallback,
   });
 
   const NavigationAction.text({
     super.key,
     required this.label,
     required this.onPressed,
-  }) : icon = null;
+  })  : icon = null,
+        fallback = null;
 
   final IconData? icon;
   final String label;
   final VoidCallback? onPressed;
+  final Widget? fallback;
 
   @override
   Widget build(BuildContext context) {
@@ -34,11 +37,12 @@ class NavigationAction extends StatelessWidget {
             ),
           )
         : null;
-    final cupertino = CupertinoButton(
-      padding: EdgeInsets.zero,
-      onPressed: onPressed,
-      child: text ?? Icon(actionIcon, semanticLabel: label),
-    );
+    final cupertino = fallback ??
+        CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: onPressed,
+          child: text ?? Icon(actionIcon, semanticLabel: label),
+        );
     if (!Get.isRegistered<GlassAppearance>()) return cupertino;
 
     final appearance = Get.find<GlassAppearance>();

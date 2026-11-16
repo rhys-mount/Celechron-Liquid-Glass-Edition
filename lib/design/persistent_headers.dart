@@ -2,6 +2,8 @@ import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 
+import 'liquid_glass/navigation_action.dart';
+
 class CelechronSliverTextHeader extends StatelessWidget {
   final String subtitle;
   final Widget? right;
@@ -54,6 +56,8 @@ class CelechronHeader extends SliverPersistentHeaderDelegate {
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
+    void goBack() => Navigator.of(context).pop();
+
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(
@@ -76,15 +80,19 @@ class CelechronHeader extends SliverPersistentHeaderDelegate {
                   if (!firstPage)
                     Container(
                       alignment: Alignment.centerLeft,
-                      child: CupertinoButton(
-                        padding: const EdgeInsets.only(left: 2),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: Icon(
-                          CupertinoIcons.back,
-                          color: CupertinoDynamicColor.resolve(
-                              CupertinoColors.label, context),
+                      child: NavigationAction(
+                        icon: CupertinoIcons.back,
+                        label: '返回',
+                        onPressed: goBack,
+                        fallback: CupertinoButton(
+                          padding: const EdgeInsets.only(left: 2),
+                          onPressed: goBack,
+                          child: Icon(
+                            CupertinoIcons.back,
+                            semanticLabel: '返回',
+                            color: CupertinoDynamicColor.resolve(
+                                CupertinoColors.label, context),
+                          ),
                         ),
                       ),
                     ),

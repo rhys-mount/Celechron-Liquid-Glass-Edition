@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:celechron/design/liquid_glass/navigation_action.dart';
 import 'package:celechron/model/task.dart';
 import 'package:celechron/utils/utils.dart';
 import 'package:celechron/utils/time_helper.dart';
@@ -132,16 +133,16 @@ class _TaskEditPageState extends State<TaskEditPage> {
       navigationBar: CupertinoNavigationBar(
         backgroundColor: CupertinoDynamicColor.resolve(
             CupertinoColors.systemGroupedBackground, context),
-        leading: CupertinoButton(
-          padding: EdgeInsets.zero,
+        leading: NavigationAction(
+          icon: CupertinoIcons.xmark,
+          label: '关闭编辑',
           onPressed: exitWithoutSave,
-          child: const Icon(CupertinoIcons.xmark),
         ),
         middle: const Text('编辑任务'),
-        trailing: CupertinoButton(
-          padding: EdgeInsets.zero,
+        trailing: NavigationAction(
+          icon: CupertinoIcons.check_mark,
+          label: '保存任务',
           onPressed: saveAndExit,
-          child: const Icon(CupertinoIcons.check_mark),
         ),
         border: null,
       ),
