@@ -31,7 +31,8 @@ void main() {
 
     await mountBar(useGlass: true);
     final glassBar = tester.widget<GlassTabBar>(find.byType(GlassTabBar));
-    expect(glassBar.maskingQuality, MaskingQuality.off);
+    expect(glassBar.maskingQuality, MaskingQuality.high);
+    expect(glassBar.quality, GlassQuality.minimal);
     expect(
         glassBar.tabs.map((tab) => tab.label), ['接下来', '日程', '任务', '学业', '设置']);
     expect(glassBar.preferredSize.height, greaterThan(0));

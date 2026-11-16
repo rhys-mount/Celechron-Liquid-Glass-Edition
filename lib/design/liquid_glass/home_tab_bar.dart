@@ -30,10 +30,12 @@ PreferredSizeWidget buildHomeTabBar(
       onTabSelected: onSelected,
       selectedIconColor: accent,
       selectedLabelColor: accent,
-      maskingQuality: defaultTargetPlatform == TargetPlatform.android
-          ? MaskingQuality.off
-          : MaskingQuality.high,
-      quality: GlassAppearance.quality,
+      // The full mask keeps the selected icon and label aligned with their tab.
+      // Use the lighter indicator on Android while retaining the glass track.
+      backgroundQuality: GlassAppearance.quality,
+      quality: defaultTargetPlatform == TargetPlatform.android
+          ? GlassQuality.minimal
+          : GlassAppearance.quality,
     );
   }
   return CupertinoTabBar(
