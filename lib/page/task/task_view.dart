@@ -1,4 +1,5 @@
 import 'package:celechron/design/custom_decoration.dart';
+import 'package:celechron/design/liquid_glass/navigation_action.dart';
 import 'package:celechron/page/flow/flow_controller.dart';
 import 'package:celechron/page/task/task_controller.dart';
 import 'package:celechron/utils/utils.dart';
@@ -543,28 +544,22 @@ class TaskPage extends StatelessWidget {
               largeTitle: const Text('任务'),
               border: null,
               stretch: true,
-              trailing: // Two buttons in the nav bar.
-                  Row(
+              trailing: Row(
                 mainAxisSize: MainAxisSize.min,
+                spacing: 6,
                 children: <Widget>[
-                  CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    child: const Icon(
-                      CupertinoIcons.add_circled,
-                      semanticLabel: 'Add',
-                    ),
+                  NavigationAction(
+                    icon: CupertinoIcons.add_circled,
+                    label: '添加任务',
                     onPressed: () async {
                       await newDeadline(context);
                       _taskController.updateDeadlineList();
                       _taskController.taskList.refresh();
                     },
                   ),
-                  CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    child: const Icon(
-                      CupertinoIcons.ellipsis_circle,
-                      semanticLabel: 'More',
-                    ),
+                  NavigationAction(
+                    icon: CupertinoIcons.ellipsis_circle,
+                    label: '更多任务操作',
                     onPressed: () async {
                       await showCupertinoModalPopup(
                         context: context,
