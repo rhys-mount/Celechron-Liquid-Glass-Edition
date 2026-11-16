@@ -1,6 +1,7 @@
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart' show Icons;
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
@@ -29,6 +30,9 @@ PreferredSizeWidget buildHomeTabBar(
       onTabSelected: onSelected,
       selectedIconColor: accent,
       selectedLabelColor: accent,
+      maskingQuality: defaultTargetPlatform == TargetPlatform.android
+          ? MaskingQuality.off
+          : MaskingQuality.high,
       quality: ImageFilter.isShaderFilterSupported
           ? GlassQuality.standard
           : GlassQuality.minimal,

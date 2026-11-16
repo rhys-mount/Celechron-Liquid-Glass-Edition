@@ -22,12 +22,13 @@
 | 底栏 MVP | `feat/liquid-glass-tab-bar` 的 `49ac056` 接入悬浮底栏、浅色求是蓝和默认开启的持久化外观开关。保留原五页与导航状态配置。共 121 项测试通过，静态分析退出 0，仍有上游原有 21 条 Info。iOS 26 起点和 iOS 27 对照 APK 均已构建。API 36 已显示 iOS 26 底栏，日志确认 Impeller OpenGLES 和玻璃库初始化成功。 |
 | Android 运行检查 | API 36 验证五页点按和滑动、当前标签保留、关闭后即时回退、冷启动持久化、重新开启、深浅色、设置末项及滚动状态、详情页返回。API 37.1 验证关闭 Impeller 后仍可启动，以及三键导航和任务编辑键盘。iOS 26／27 在同一 API 36 设备留存深浅对照。截图和语义树位于本地 `.local/mvp/`。 |
 | Profile 试验 | 同一 API 37.1 x86_64 模拟器、同一个 iOS 26 Profile APK 对照反复切页。玻璃栏 UI／Raster P95 为 4.01／60.59 ms，Cupertino 回退为 3.97／4.75 ms。原始 Flutter 时间线和统计位于本地 `.local/mvp/profile-*-tabs.json` 和 `.local/mvp/profile-tab-timing.json`。 |
+| Android 简化遮罩 | 使用同一设备和切页序列，关闭库的双层选中态遮罩后，UI／Raster P95 为 2.43／20.25 ms，235 帧中有 80 帧的 Raster 阶段超过 16.7 ms。专项测试通过，结果记录于 `.local/mvp/profile-simple-mask-timing.json`。 |
 | 文档整理 | 将 `IMPLEMENTATION_PLAN.md.md` 改为 `IMPLEMENTATION_PLAN.md`，SHA-256 校验确认内容一致。完成文档对照并初始化本页。 |
 
 ## 未完成事项
 
 - Edition 的远端分支、PR 和 GitHub Actions 运行尚待验证。原版 App 的登录态校园业务与 Android 真机仍待回归。
-- **当前卡点是底栏光栅耗时。** 模拟器切页时玻璃栏 182 帧中有 179 帧的 Raster 阶段超过 16.7 ms。先试验降低选中态遮罩成本并复测。真机持续滚动、默认画质和正式预设仍待验证。
+- **当前卡点是底栏光栅耗时。** 简化遮罩已经降低模拟器的 Raster P95，仍需试验限制滤镜覆盖范围，并检查阴影与交互。真机持续滚动、默认画质和正式预设仍待验证。
 - 顶部导航、五页与二级页面的进一步视觉改造、过期横幅移除、关于页署名、图标、启动页、平板适配和 Release 流程均待实施。
 - iOS 26／27 预设、设备默认画质、深色强调色的精确值、`GlassScaffold` 使用范围、平板断点及 Sidebar／Split View 实现仍待验证或定案。`#5B9BEE` 是深色候选值。
 

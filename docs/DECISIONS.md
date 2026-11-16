@@ -19,3 +19,7 @@ API 36 验收使用同样隔离的 `Celechron_Isolated_API_36`（`emulator-5566`
 底栏接入保留现有 `HomePage`、`PageController`、五页实例和根导航。玻璃栏和 Cupertino 栏共用五个标签和回调。外观开关使用已有 Hive 设置盒内的一条新布尔键，缺省开启，关闭时在原位置切回 Cupertino。
 
 MVP 用 iOS 26 材质作为试验起点，用 `--dart-define=CELECHRON_GLASS_IOS27=true` 构造 iOS 27 对照。底栏试验采用 Standard，运行时 Shader 滤镜不可用则尝试 Minimal，预载异常时使用 Cupertino。正式材质、画质与深色强调色继续按设备验收决定。
+
+## 2026-11-16 · Android 底栏简化选中态遮罩
+
+API 37.1 模拟器的同序列 Profile 采样显示，关闭库的双层遮罩后 Raster P95 从 60.59 ms 降到 20.25 ms。Android 使用库的简化遮罩，继续使用悬浮玻璃表面、滑动选中态和原有触摸反馈。用户开关与内部渲染策略独立。实机长列表与高刷新率场景仍待验收。
