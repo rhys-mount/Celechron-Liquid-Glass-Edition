@@ -154,6 +154,21 @@ class _CreditsPageState extends State<CreditsPage> {
                       )
                     ],
                   ),
+                  const Text(
+                    'Liquid Glass Edition',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Liquid Glass 适配 · rhys-mount',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color:
+                          CupertinoColors.secondaryLabel.resolveFrom(context),
+                    ),
+                  ),
                   const SizedBox(
                     height: 24,
                   ),
