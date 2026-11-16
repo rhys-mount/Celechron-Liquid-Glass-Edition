@@ -6,6 +6,7 @@ import 'package:celechron/page/task/task_controller.dart';
 import 'package:celechron/page/task/task_edit_page.dart';
 import 'package:celechron/page/flow/flow_controller.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -95,144 +96,168 @@ class CalendarPage extends StatelessWidget {
                       CalendarViewMode.schedule) {
                     return ScheduleView(controller: _calendarController);
                   }
-                  return CustomScrollView(
-                    slivers: [
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.only(
-                              bottom: 5, left: 12, right: 12),
-                          child: TableCalendar(
-                            locale: 'zh_CN',
-                            firstDay: DateTime.utc(2022, 9, 1),
-                            lastDay: DateTime.utc(2030, 12, 31),
-                            rowHeight: 48.0,
-                            daysOfWeekHeight: 20.0,
-                            startingDayOfWeek: StartingDayOfWeek.monday,
-                            daysOfWeekStyle: DaysOfWeekStyle(
-                              dowTextFormatter: (date, locale) => <String>[
-                                '',
-                                '一',
-                                '二',
-                                '三',
-                                '四',
-                                '五',
-                                '六',
-                                '日'
-                              ][date.weekday],
-                            ),
-                            availableGestures: AvailableGestures.all,
-                            availableCalendarFormats: const {
-                              CalendarFormat.month: '显示整月',
-                              CalendarFormat.week: '显示一周',
-                            },
-                            headerVisible: false,
-                            focusedDay: _calendarController.focusedDay.value,
-                            selectedDayPredicate: (day) {
-                              return isSameDay(
-                                  _calendarController.selectedDay.value, day);
-                            },
-                            calendarFormat:
-                                _calendarController.calendarFormat.value,
-                            onPageChanged: (focusedDay) {
-                              _calendarController.focusedDay.value = focusedDay;
-                            },
-                            onDaySelected: (selectedDay, focusedDay) {
-                              _calendarController.focusedDay.value = focusedDay;
-                              _calendarController.selectedDay.value =
-                                  selectedDay;
-                              _calendarController.focusedDay.refresh();
-                            },
-                            onFormatChanged: (format) {
-                              _calendarController.calendarFormat.value = format;
-                            },
-                            eventLoader: (day) {
-                              return _calendarController.getEventsForDay(day);
-                            },
-                            calendarStyle: CalendarStyle(
-                              markersAnchor: -0.1,
-                              markersMaxCount: 10,
-                              selectedDecoration: BoxDecoration(
-                                color: CupertinoDynamicColor.resolve(
-                                    CupertinoColors.activeBlue
-                                        .withValues(alpha: 0.5),
-                                    context),
-                                shape: BoxShape.circle,
-                              ),
-                              selectedTextStyle: CupertinoTheme.of(context)
-                                  .textTheme
-                                  .textStyle,
-                              todayDecoration: BoxDecoration(
-                                color: CupertinoDynamicColor.resolve(
-                                    CupertinoColors.inactiveGray
-                                        .withValues(alpha: 0.5),
-                                    context),
-                                shape: BoxShape.circle,
-                              ),
-                              todayTextStyle: CupertinoTheme.of(context)
-                                  .textTheme
-                                  .textStyle,
-                              defaultTextStyle: CupertinoTheme.of(context)
-                                  .textTheme
-                                  .textStyle,
-                            ),
-                            calendarBuilders: const CalendarBuilders(
-                              singleMarkerBuilder: singleMarkerBuilder,
-                            ),
-                          ),
-                        ),
+                  final calendar = Padding(
+                    padding:
+                        const EdgeInsets.only(bottom: 5, left: 12, right: 12),
+                    child: TableCalendar(
+                      locale: 'zh_CN',
+                      firstDay: DateTime.utc(2022, 9, 1),
+                      lastDay: DateTime.utc(2030, 12, 31),
+                      rowHeight: 48.0,
+                      daysOfWeekHeight: 20.0,
+                      startingDayOfWeek: StartingDayOfWeek.monday,
+                      daysOfWeekStyle: DaysOfWeekStyle(
+                        dowTextFormatter: (date, locale) => <String>[
+                          '',
+                          '一',
+                          '二',
+                          '三',
+                          '四',
+                          '五',
+                          '六',
+                          '日'
+                        ][date.weekday],
                       ),
-                      const SliverToBoxAdapter(child: SizedBox(height: 16)),
-                      SliverToBoxAdapter(
-                        child: Obx(
-                          () => SubSubtitleRow(
-                              padHorizontal: 24,
-                              subtitle: _calendarController.dayDescription(
-                                  _calendarController.selectedDay.value
-                                      .copyWith(isUtc: false)),
-                              right: _calendarController
-                                      .scholar.value.specialDates
-                                      .containsKey(_calendarController
-                                          .selectedDay.value
-                                          .copyWith(isUtc: false))
-                                  ? Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                          border: Border.all(
-                                              color:
-                                                  CustomCupertinoDynamicColors
-                                                      .okGreen.darkColor,
-                                              width: 1),
-                                          borderRadius:
-                                              BorderRadius.circular(10)),
-                                      child: Text(
-                                        _calendarController
-                                                .scholar.value.specialDates[
-                                            _calendarController
-                                                .selectedDay.value
-                                                .copyWith(isUtc: false)]!,
-                                        style: TextStyle(
+                      availableGestures: AvailableGestures.all,
+                      availableCalendarFormats: const {
+                        CalendarFormat.month: '显示整月',
+                        CalendarFormat.week: '显示一周',
+                      },
+                      headerVisible: false,
+                      focusedDay: _calendarController.focusedDay.value,
+                      selectedDayPredicate: (day) {
+                        return isSameDay(
+                            _calendarController.selectedDay.value, day);
+                      },
+                      calendarFormat: _calendarController.calendarFormat.value,
+                      onPageChanged: (focusedDay) {
+                        _calendarController.focusedDay.value = focusedDay;
+                      },
+                      onDaySelected: (selectedDay, focusedDay) {
+                        _calendarController.focusedDay.value = focusedDay;
+                        _calendarController.selectedDay.value = selectedDay;
+                        _calendarController.focusedDay.refresh();
+                      },
+                      onFormatChanged: (format) {
+                        _calendarController.calendarFormat.value = format;
+                      },
+                      eventLoader: (day) {
+                        return _calendarController.getEventsForDay(day);
+                      },
+                      calendarStyle: CalendarStyle(
+                        markersAnchor: -0.1,
+                        markersMaxCount: 10,
+                        selectedDecoration: BoxDecoration(
+                          color: CupertinoDynamicColor.resolve(
+                              CupertinoColors.activeBlue.withValues(alpha: 0.5),
+                              context),
+                          shape: BoxShape.circle,
+                        ),
+                        selectedTextStyle:
+                            CupertinoTheme.of(context).textTheme.textStyle,
+                        todayDecoration: BoxDecoration(
+                          color: CupertinoDynamicColor.resolve(
+                              CupertinoColors.inactiveGray
+                                  .withValues(alpha: 0.5),
+                              context),
+                          shape: BoxShape.circle,
+                        ),
+                        todayTextStyle:
+                            CupertinoTheme.of(context).textTheme.textStyle,
+                        defaultTextStyle:
+                            CupertinoTheme.of(context).textTheme.textStyle,
+                      ),
+                      calendarBuilders: const CalendarBuilders(
+                        singleMarkerBuilder: singleMarkerBuilder,
+                      ),
+                    ),
+                  );
+                  final daySlivers = [
+                    SliverToBoxAdapter(
+                      child: Obx(
+                        () => SubSubtitleRow(
+                            padHorizontal: 24,
+                            subtitle: _calendarController.dayDescription(
+                                _calendarController.selectedDay.value
+                                    .copyWith(isUtc: false)),
+                            right: _calendarController
+                                    .scholar.value.specialDates
+                                    .containsKey(_calendarController
+                                        .selectedDay.value
+                                        .copyWith(isUtc: false))
+                                ? Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                        border: Border.all(
                                             color: CustomCupertinoDynamicColors
                                                 .okGreen.darkColor,
-                                            fontSize: 12),
-                                      ),
-                                    )
-                                  : null),
-                        ),
+                                            width: 1),
+                                        borderRadius:
+                                            BorderRadius.circular(10)),
+                                    child: Text(
+                                      _calendarController
+                                              .scholar.value.specialDates[
+                                          _calendarController.selectedDay.value
+                                              .copyWith(isUtc: false)]!,
+                                      style: TextStyle(
+                                          color: CustomCupertinoDynamicColors
+                                              .okGreen.darkColor,
+                                          fontSize: 12),
+                                    ),
+                                  )
+                                : null),
                       ),
-                      Obx(() {
-                        final events = _calendarController.getEventsForDay(
-                            _calendarController.selectedDay.value);
-                        return SliverList.builder(
-                          itemCount: events.length,
-                          itemBuilder: (context, index) => Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 5, horizontal: 16),
-                            child: createCard(context, events[index]),
-                          ),
+                    ),
+                    Obx(() {
+                      final events = _calendarController.getEventsForDay(
+                          _calendarController.selectedDay.value);
+                      return SliverList.builder(
+                        itemCount: events.length,
+                        itemBuilder: (context, index) => Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 5, horizontal: 16),
+                          child: createCard(context, events[index]),
+                        ),
+                      );
+                    }),
+                  ];
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      final useColumns =
+                          defaultTargetPlatform == TargetPlatform.android &&
+                              MediaQuery.orientationOf(context) ==
+                                  Orientation.landscape &&
+                              constraints.maxWidth >= 760 &&
+                              constraints.maxHeight >= 420;
+                      if (useColumns) {
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          spacing: 16,
+                          children: [
+                            Expanded(
+                              child: SingleChildScrollView(
+                                primary: false,
+                                child: calendar,
+                              ),
+                            ),
+                            Expanded(
+                              child: CustomScrollView(
+                                primary: false,
+                                slivers: daySlivers,
+                              ),
+                            ),
+                          ],
                         );
-                      }),
-                    ],
+                      }
+                      return CustomScrollView(
+                        slivers: [
+                          SliverToBoxAdapter(child: calendar),
+                          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                          ...daySlivers,
+                        ],
+                      );
+                    },
                   );
                 },
               ),

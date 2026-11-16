@@ -45,3 +45,5 @@ Android 恢复完整遮罩，选中胶囊使用 Minimal，底栏背景保留能�
 ## 2026-11-16 · Android 平板侧栏使用窗口尺寸
 
 开启 Liquid Glass 时，横屏窗口宽度至少 840 dp 且高度至少 480 dp 使用紧凑侧栏，宽度达到 1200 dp 时显示文字。侧栏使用一个玻璃容器，沿用同一 `PageView`、标签定义和回调。紧凑侧栏在同一个无障碍节点上提供标签、点击动作和选中状态。 [Android 窗口尺寸等级](https://developer.android.com/develop/ui/compose/layouts/adaptive/use-window-size-classes)
+
+日程双栏依据侧栏和安全区扣除后的实际内容空间，Android 横屏下宽度至少 760 dp、高度至少 420 dp 时并排显示月历与当天事项。两种布局复用同一日历、选日状态、事项列表和原有编辑路由。
