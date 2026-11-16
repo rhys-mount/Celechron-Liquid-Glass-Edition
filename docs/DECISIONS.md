@@ -37,3 +37,7 @@ Android 恢复完整遮罩，选中胶囊使用 Minimal，底栏背景保留能�
 ## 2026-11-16 · 日程窄屏标题与日期滚动
 
 日程保留紧凑的月份／学期标题和原有三个操作。320 dp、1.3 倍字号的截图发现，当月历占满高度后，当天说明会在固定高度的列中溢出。月份标题按年月单位换行，月历和当天日程位于同一个纵向滚动区，顶栏保留在原处。已验证原有月／周切换手势和课程表切换。
+
+## 2026-11-16 · Android 图标复用原生矢量
+
+用同一个求是蓝时钟矢量作为 Android Adaptive Icon 的前景及系统启动标记。深浅背景由 Android 资源限定符选择，Android 12 及以上使用系统 Splash Screen，API 28–30 使用启动窗口图层。启动图标为静态，由系统在首帧就绪时交接。 [Android 自适应图标规范](https://developer.android.com/develop/ui/compose/system/icon_design_adaptive) [Android 启动页规范](https://developer.android.com/develop/ui/views/launch/splash-screen)
