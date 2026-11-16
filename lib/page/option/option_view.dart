@@ -38,6 +38,7 @@ class OptionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appearance = Get.find<GlassAppearance>();
+    final accent = CupertinoTheme.of(context).primaryColor;
     var trailingTextStyle = TextStyle(
         color: CupertinoDynamicColor.resolve(
             CupertinoColors.secondaryLabel, context),
@@ -124,12 +125,24 @@ class OptionPage extends StatelessWidget {
                                   style: CupertinoTheme.of(context)
                                       .textTheme
                                       .textStyle
-                                      .copyWith(fontSize: 16)),
+                                      .copyWith(
+                                        fontSize: 16,
+                                        color: _optionController.gpaStrategy ==
+                                                GpaStrategy.first
+                                            ? accent
+                                            : null,
+                                      )),
                               GpaStrategy.best: Text('取最高',
                                   style: CupertinoTheme.of(context)
                                       .textTheme
                                       .textStyle
-                                      .copyWith(fontSize: 16)),
+                                      .copyWith(
+                                        fontSize: 16,
+                                        color: _optionController.gpaStrategy ==
+                                                GpaStrategy.best
+                                            ? accent
+                                            : null,
+                                      )),
                             },
                             groupValue: _optionController.gpaStrategy,
                             onValueChanged: (value) {
@@ -141,6 +154,7 @@ class OptionPage extends StatelessWidget {
                             title: const Text('隐藏绩点'),
                             trailing: Obx(() => CupertinoSwitch(
                                   value: _optionController.hideHomeGpa,
+                                  activeTrackColor: accent,
                                   onChanged: (value) async {
                                     _optionController.hideHomeGpa = value;
                                   },
@@ -159,6 +173,7 @@ class OptionPage extends StatelessWidget {
                             title: const Text('异步刷新'),
                             trailing: Obx(() => CupertinoSwitch(
                                   value: _optionController.asyncRefresh,
+                                  activeTrackColor: accent,
                                   onChanged: (value) async {
                                     _optionController.asyncRefresh = value;
                                   },
@@ -167,6 +182,7 @@ class OptionPage extends StatelessWidget {
                             title: const Text('推送成绩变动'),
                             trailing: CupertinoSwitch(
                               value: _optionController.pushOnGradeChange,
+                              activeTrackColor: accent,
                               onChanged: PlatformFeatures.hasBackgroundRefresh
                                   ? (value) async {
                                       _optionController.pushOnGradeChange =
@@ -178,6 +194,7 @@ class OptionPage extends StatelessWidget {
                             title: const Text('推送作业截止提醒'),
                             trailing: CupertinoSwitch(
                               value: _optionController.pushOnDdlReminder,
+                              activeTrackColor: accent,
                               onChanged: PlatformFeatures.hasBackgroundRefresh
                                   ? (value) async {
                                       _optionController.pushOnDdlReminder =
@@ -343,6 +360,7 @@ class OptionPage extends StatelessWidget {
                         trailing: CupertinoAsyncSwitch(
                           value: _optionController.calendarSyncEnabled &&
                               _optionController.hasCalendarPermission,
+                          activeTrackColor: accent,
                           onChanged: (value) async {
                             await _optionController.toggleCalendarSync(
                                 context, value);
@@ -390,32 +408,35 @@ class OptionPage extends StatelessWidget {
                     child: Text('外观', style: headerFooterTextStyle),
                   ),
                   children: [
-                    CupertinoListTile(
-                      title: const Text('Liquid Glass'),
-                      trailing: Obx(
-                        () => CupertinoAsyncSwitch(
-                          value: appearance.enabled.value,
-                          onChanged: (value) async {
-                            try {
-                              await appearance.setEnabled(value);
-                            } on Object {
-                              if (!context.mounted) return;
-                              await showCupertinoDialog<void>(
-                                context: context,
-                                builder: (dialogContext) =>
-                                    CupertinoAlertDialog(
-                                  title: const Text('无法保存外观设置'),
-                                  actions: [
-                                    CupertinoDialogAction(
-                                      onPressed: () =>
-                                          Navigator.pop(dialogContext),
-                                      child: const Text('确定'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }
-                          },
+                    MergeSemantics(
+                      child: CupertinoListTile(
+                        title: const Text('Liquid Glass'),
+                        trailing: Obx(
+                          () => CupertinoAsyncSwitch(
+                            value: appearance.enabled.value,
+                            activeTrackColor: accent,
+                            onChanged: (value) async {
+                              try {
+                                await appearance.setEnabled(value);
+                              } on Object {
+                                if (!context.mounted) return;
+                                await showCupertinoDialog<void>(
+                                  context: context,
+                                  builder: (dialogContext) =>
+                                      CupertinoAlertDialog(
+                                    title: const Text('无法保存外观设置'),
+                                    actions: [
+                                      CupertinoDialogAction(
+                                        onPressed: () =>
+                                            Navigator.pop(dialogContext),
+                                        child: const Text('确定'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                            },
+                          ),
                         ),
                       ),
                     ),

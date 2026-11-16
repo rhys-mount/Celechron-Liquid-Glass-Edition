@@ -5,12 +5,14 @@ import 'package:flutter/cupertino.dart';
 
 class CupertinoAsyncSwitch extends StatefulWidget {
   final bool value;
+  final Color? activeTrackColor;
   final Future<void> Function(bool) onChanged;
 
   const CupertinoAsyncSwitch({
     super.key,
     required this.value,
     required this.onChanged,
+    this.activeTrackColor,
   });
 
   @override
@@ -51,6 +53,7 @@ class _CupertinoAsyncSwitchState extends State<CupertinoAsyncSwitch> {
           ),
         CupertinoSwitch(
           value: _isLoading ? !widget.value : widget.value,
+          activeTrackColor: widget.activeTrackColor,
           onChanged: _isLoading ? null : _handleChanged,
         ),
       ],
