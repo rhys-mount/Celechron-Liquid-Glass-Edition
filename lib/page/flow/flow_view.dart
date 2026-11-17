@@ -1,3 +1,4 @@
+import 'package:celechron/design/content_empty_state.dart';
 import 'dart:async';
 import 'dart:math';
 import 'package:celechron/design/custom_colors.dart';
@@ -37,7 +38,7 @@ class FlowPage extends StatelessWidget {
         title == null
             ? const SizedBox(height: 0)
             : SubtitleRow(subtitle: title),
-        RoundRectangleCard(
+        RoundRectangleCard.content(
           onTap: period.type == PeriodType.classes
               ? () async => Navigator.of(context, rootNavigator: true).push(
                   CupertinoPageRoute(
@@ -285,7 +286,7 @@ class FlowPage extends StatelessWidget {
         title == null
             ? const SizedBox(height: 0)
             : SubtitleRow(subtitle: title),
-        RoundRectangleCard(
+        RoundRectangleCard.content(
             onTap: period.type == PeriodType.classes
                 ? () async => Navigator.of(context, rootNavigator: true).push(
                     CupertinoPageRoute(
@@ -593,19 +594,10 @@ class FlowPage extends StatelessWidget {
             Obx(
               () {
                 if (_flowController.flowList.isEmpty) {
-                  return SliverToBoxAdapter(
-                    child: SizedBox(
-                      height: 500,
-                      child: Column(
-                        children: [
-                          const Spacer(),
-                          Text('今日无事可做',
-                              style: CupertinoTheme.of(context)
-                                  .textTheme
-                                  .textStyle),
-                          const Spacer(),
-                        ],
-                      ),
+                  return const SliverToBoxAdapter(
+                    child: ContentEmptyState(
+                      icon: CupertinoIcons.clock,
+                      title: '今日无事可做',
                     ),
                   );
                 }

@@ -146,7 +146,7 @@ void main() {
 
   Future<void> tapDeleteInEditPage(WidgetTester tester) async {
     await tester.scrollUntilVisible(
-      find.text('删除任务'),
+      find.text('删除任务').hitTestable(),
       300,
       scrollable: find.byType(Scrollable).first,
     );
@@ -305,6 +305,60 @@ void main() {
       expect(find.text('删除功能'), findsNothing);
       expect(_aliveTasks(taskList), isEmpty);
     });
+  });
+
+  testWidgets('窄屏输入和调整截止时间后，键盘打开时仍能保存草稿', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(320, 640);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetViewInsets);
+
+    final task = _testTask(summary: '原任务');
+    const draft = '整理本学期高等数学和数字信号处理课程的期末复习资料';
+    final newEnd = task.endTime.add(const Duration(days: 1));
+    Task? result;
+    await tester.pumpWidget(CupertinoApp(
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          textScaler: const TextScaler.linear(1.4),
+        ),
+        child: child!,
+      ),
+      home: Builder(builder: (context) {
+        return CupertinoPageScaffold(
+          child: CupertinoButton(
+            onPressed: () async {
+              result = await Navigator.of(context).push<Task>(
+                CupertinoPageRoute(builder: (_) => TaskEditPage(task)),
+              );
+            },
+            child: const Text('打开编辑'),
+          ),
+        );
+      }),
+    ));
+    await tester.tap(find.text('打开编辑'));
+    await tester.pumpAndSettle();
+
+    final field = find.byType(CupertinoTextField).first;
+    await tester.enterText(field, draft);
+    await tester.tap(find.text('截止时间'));
+    await tester.pumpAndSettle();
+    final date = find.byType(CupertinoDatePicker);
+    tester.widget<CupertinoDatePicker>(date).onDateTimeChanged(newEnd);
+    Navigator.of(tester.element(date)).pop();
+    await tester.pumpAndSettle();
+    expect(tester.widget<CupertinoTextField>(field).controller!.text, draft);
+
+    await tester.tap(field);
+    tester.view.viewInsets = const FakeViewPadding(bottom: 260);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('保存').hitTestable());
+    await tester.pumpAndSettle();
+    expect(result?.summary, draft);
+    expect(result?.endTime, newEnd);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('对照组：编辑页点“删除任务”确实会返回 status=deleted 的任务', (tester) async {

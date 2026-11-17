@@ -14,7 +14,33 @@ class TaskEditPage extends StatefulWidget {
 
 class _TaskEditPageState extends State<TaskEditPage> {
   late Task now;
-  int __got = 0;
+  late final TextEditingController _summary;
+  late final TextEditingController _location;
+  late final TextEditingController _description;
+
+  @override
+  void initState() {
+    super.initState();
+    now = widget.deadline.copyWith();
+    if (now.startTime.isAfter(now.endTime)) {
+      now.startTime = now.endTime.subtract(const Duration(minutes: 1));
+    }
+    if (now.repeatEndsTime.isAfter(DateTime(2099)) ||
+        dateOnly(now.repeatEndsTime).isBefore(dateOnly(now.startTime))) {
+      now.repeatEndsTime = dateOnly(now.startTime);
+    }
+    _summary = TextEditingController(text: now.summary);
+    _location = TextEditingController(text: now.location);
+    _description = TextEditingController(text: now.description);
+  }
+
+  @override
+  void dispose() {
+    _summary.dispose();
+    _location.dispose();
+    _description.dispose();
+    super.dispose();
+  }
 
   void saveAndExit() {
     if (now.type == TaskType.fixed && !now.startTime.isBefore(now.endTime)) {
@@ -23,7 +49,7 @@ class _TaskEditPageState extends State<TaskEditPage> {
         builder: (BuildContext context) {
           return CupertinoAlertDialog(
             title: const Text(
-              '开始时间必须晚于结束时间',
+              '结束时间必须晚于开始时间',
             ),
             actions: [
               CupertinoDialogAction(
@@ -111,18 +137,6 @@ class _TaskEditPageState extends State<TaskEditPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (__got == 0) {
-      now = widget.deadline.copyWith();
-      if (now.startTime.isAfter(now.endTime)) {
-        now.startTime = now.endTime.add(const Duration(minutes: -1));
-      }
-      if (now.repeatEndsTime.isAfter(DateTime(2099, 1, 1)) ||
-          dateOnly(now.repeatEndsTime).isBefore(dateOnly(now.startTime))) {
-        now.repeatEndsTime = dateOnly(now.startTime);
-      }
-      __got = 1;
-    }
-
     List<String> deadlineRepeatTypeNameList = [];
     for (var i in TaskRepeatType.values) {
       deadlineRepeatTypeNameList.add(deadlineRepeatTypeName[i]!);
@@ -139,15 +153,24 @@ class _TaskEditPageState extends State<TaskEditPage> {
           onPressed: exitWithoutSave,
         ),
         middle: const Text('编辑任务'),
-        trailing: NavigationAction(
-          icon: CupertinoIcons.check_mark,
+        trailing: Semantics(
           label: '保存任务',
-          onPressed: saveAndExit,
+          button: true,
+          onTap: saveAndExit,
+          excludeSemantics: true,
+          child: CupertinoButton.filled(
+            minimumSize: const Size(52, 44),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            borderRadius: BorderRadius.circular(22),
+            onPressed: saveAndExit,
+            child: const Text('保存', style: TextStyle(fontSize: 15)),
+          ),
         ),
         border: null,
       ),
       child: SafeArea(
         child: CustomScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           slivers: [
             SliverList(
               delegate: SliverChildListDelegate([
@@ -183,23 +206,24 @@ class _TaskEditPageState extends State<TaskEditPage> {
                   ),
                 ),
                 CupertinoListSection.insetGrouped(
+                  header: const Text('基本信息'),
                   children: [
                     CupertinoTextFormFieldRow(
                       placeholder: '任务名',
                       textAlign: TextAlign.left,
-                      controller: TextEditingController(text: now.summary),
+                      controller: _summary,
+                      maxLines: 3,
+                      minLines: 1,
                       onChanged: (String value) {
                         now.summary = value;
                       },
                     ),
                     if (now.type == TaskType.fixed)
-                      CupertinoTextFormFieldRow(
-                        placeholder: '开始时间',
-                        textAlign: TextAlign.left,
-                        controller: TextEditingController(
-                            text:
-                                '开始于 ${TimeHelper.chineseDateTime(now.startTime)}'),
-                        readOnly: true,
+                      CupertinoListTile(
+                        title: const Text('开始时间'),
+                        subtitle:
+                            Text(TimeHelper.chineseDateTime(now.startTime)),
+                        trailing: const CupertinoListTileChevron(),
                         onTap: () async {
                           await showCupertinoModalPopup(
                               context: context,
@@ -232,13 +256,11 @@ class _TaskEditPageState extends State<TaskEditPage> {
                           }
                         },
                       ),
-                    CupertinoTextFormFieldRow(
-                      placeholder: '结束时间',
-                      textAlign: TextAlign.left,
-                      controller: TextEditingController(
-                          text:
-                              '${now.type == TaskType.deadline ? '截止于' : '结束于'} ${TimeHelper.chineseDateTime(now.endTime)}'),
-                      readOnly: true,
+                    CupertinoListTile(
+                      title:
+                          Text(now.type == TaskType.deadline ? '截止时间' : '结束时间'),
+                      subtitle: Text(TimeHelper.chineseDateTime(now.endTime)),
+                      trailing: const CupertinoListTileChevron(),
                       onTap: () async {
                         await showCupertinoModalPopup(
                             context: context,
@@ -644,7 +666,7 @@ class _TaskEditPageState extends State<TaskEditPage> {
                     CupertinoTextFormFieldRow(
                       placeholder: '地点',
                       textAlign: TextAlign.left,
-                      controller: TextEditingController(text: now.location),
+                      controller: _location,
                       onChanged: (String value) {
                         now.location = value;
                       },
@@ -652,7 +674,9 @@ class _TaskEditPageState extends State<TaskEditPage> {
                     CupertinoTextFormFieldRow(
                       placeholder: '说明',
                       textAlign: TextAlign.left,
-                      controller: TextEditingController(text: now.description),
+                      controller: _description,
+                      maxLines: 6,
+                      minLines: 2,
                       onChanged: (String value) {
                         now.description = value;
                       },

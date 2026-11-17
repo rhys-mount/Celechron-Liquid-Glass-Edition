@@ -8,6 +8,7 @@ class RoundRectangleCard extends StatefulWidget {
   final bool animate;
   final List<BoxShadow> boxShadow;
   final EdgeInsets padding;
+  final double cornerRadius;
 
   const RoundRectangleCard({
     super.key,
@@ -15,6 +16,7 @@ class RoundRectangleCard extends StatefulWidget {
     this.onTap,
     this.animate = true,
     this.padding = const EdgeInsets.all(12),
+    this.cornerRadius = 12,
     this.boxShadow = const [
       BoxShadow(
         color: CupertinoColors.systemGrey5,
@@ -24,6 +26,18 @@ class RoundRectangleCard extends StatefulWidget {
       ),
     ],
   });
+
+  const RoundRectangleCard.content({
+    super.key,
+    required this.child,
+    this.onTap,
+    this.animate = true,
+    this.padding = const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+  })  : cornerRadius = 16,
+        boxShadow = const [
+          BoxShadow(
+              color: Color(0x14002743), blurRadius: 5, offset: Offset(0, 2)),
+        ];
 
   @override
   State<RoundRectangleCard> createState() => _RoundRectangleCardState();
@@ -84,7 +98,7 @@ class _RoundRectangleCardState extends State<RoundRectangleCard>
         //         : widget.boxShadow),
         // 修改了颜色控制逻辑，应该跟随应用设置而非系统设置
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(widget.cornerRadius),
           boxShadow: brightness == Brightness.dark ? null : widget.boxShadow,
           color: brightness == Brightness.dark
               ? CupertinoDynamicColor.resolve(
@@ -115,7 +129,15 @@ class _RoundRectangleCardState extends State<RoundRectangleCard>
             onTapCancel: () async => _animationController.reverse(),
             child: ScaleTransition(scale: _scaleAnimation, child: core),
           )
-        : GestureDetector(onTap: widget.onTap, child: core);
+        : widget.onTap == null
+            ? core
+            : CupertinoButton(
+                minimumSize: Size.zero,
+                padding: EdgeInsets.zero,
+                pressedOpacity: 0.78,
+                onPressed: widget.onTap,
+                child: core,
+              );
   }
 }
 

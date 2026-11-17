@@ -91,6 +91,24 @@ class TimeHelper {
     );
   }
 
+  static String compactDateTime(DateTime dateTime,
+      {required DateTime relativeTo}) {
+    final local = dateTime.toLocal();
+    final today = relativeTo.toLocal();
+    final day = DateTime.utc(local.year, local.month, local.day);
+    final reference = DateTime.utc(today.year, today.month, today.day);
+    final label = switch (day.difference(reference).inDays) {
+      -1 => '昨天',
+      0 => '今天',
+      1 => '明天',
+      _ when local.year == today.year => '${local.month} 月 ${local.day} 日',
+      _ => '${local.year} 年 ${local.month} 月 ${local.day} 日',
+    };
+    final hour = local.hour.toString().padLeft(2, '0');
+    final minute = local.minute.toString().padLeft(2, '0');
+    return '$label $hour:$minute';
+  }
+
   static String chineseDateTime(DateTime dateTime) {
     if (dateTime.year == 1970) {
       return '考试周第 ${dateTime.day} 天 ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';

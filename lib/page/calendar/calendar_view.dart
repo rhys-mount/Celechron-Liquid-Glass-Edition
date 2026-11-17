@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:celechron/design/card_detail_line.dart';
 import 'package:celechron/design/custom_decoration.dart';
 import 'package:celechron/design/liquid_glass/home_scroll_insets.dart';
 import 'package:celechron/design/liquid_glass/navigation_action.dart';
@@ -36,62 +37,64 @@ class CalendarPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Obx(
-              () => SubtitleRow(
+            Obx(() {
+              final isCalendar = _calendarController.viewMode.value ==
+                  CalendarViewMode.calendar;
+              final focused = _calendarController.focusedDay.value;
+              void toggleView() => _calendarController.toggleViewMode();
+              return SubtitleRow(
                 wrapSubtitle: true,
-                subtitle: _calendarController.viewMode.value ==
-                        CalendarViewMode.calendar
-                    ? '${_calendarController.focusedDay.value.year}\u00a0年 '
-                        '${_calendarController.focusedDay.value.month}\u00a0月'
+                subtitle: isCalendar
+                    ? '${focused.year}\u00a0年 ${focused.month}\u00a0月'
                     : _calendarController.getCurrentSemesterDisplayName(),
-                right: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  spacing: 4,
-                  children: [
-                    if (_calendarController.viewMode.value ==
-                        CalendarViewMode.calendar) ...[
-                      NavigationAction(
-                        icon: CupertinoIcons.add,
-                        label: '添加日程或任务',
-                        onPressed: () async {
-                          await newDeadline(
-                            context,
-                            time: DateTime(
-                              _calendarController.selectedDay.value.year,
-                              _calendarController.selectedDay.value.month,
-                              _calendarController.selectedDay.value.day,
-                              DateTime.now().hour,
-                              DateTime.now().minute,
+                right: isCalendar
+                    ? Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CupertinoButton(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            onPressed: () {
+                              final today = DateTime.now();
+                              _calendarController.focusedDay.value = today;
+                              _calendarController.selectedDay.value = today;
+                            },
+                            child: const Text('今天',
+                                style: TextStyle(fontSize: 15)),
+                          ),
+                          NavigationActionGroup(actions: [
+                            (
+                              icon: CupertinoIcons.add,
+                              label: '添加日程或任务',
+                              onPressed: () async {
+                                final day =
+                                    _calendarController.selectedDay.value;
+                                final now = DateTime.now();
+                                await newDeadline(
+                                  context,
+                                  time: DateTime(day.year, day.month, day.day,
+                                      now.hour, now.minute),
+                                );
+                                _taskController.updateDeadlineList();
+                                _taskController.taskList.refresh();
+                              },
                             ),
-                          );
-                          _taskController.updateDeadlineList();
-                          _taskController.taskList.refresh();
-                        },
+                            (
+                              icon: CupertinoIcons.calendar,
+                              label: '切换视图',
+                              onPressed: toggleView,
+                            ),
+                          ]),
+                        ],
+                      )
+                    : NavigationAction(
+                        icon: CupertinoIcons.list_bullet,
+                        label: '切换视图',
+                        onPressed: toggleView,
                       ),
-                      NavigationAction.text(
-                        label: '今天',
-                        onPressed: () {
-                          _calendarController.focusedDay.value = DateTime.now();
-                          _calendarController.selectedDay.value =
-                              DateTime.now();
-                        },
-                      ),
-                    ],
-                    NavigationAction(
-                      icon: _calendarController.viewMode.value ==
-                              CalendarViewMode.calendar
-                          ? CupertinoIcons.calendar
-                          : CupertinoIcons.list_bullet,
-                      label: '切换视图',
-                      onPressed: () {
-                        _calendarController.toggleViewMode();
-                      },
-                    ),
-                  ],
-                ),
-                padHorizontal: 18,
-              ),
-            ),
+                padHorizontal: 16,
+                padVertical: 8,
+              );
+            }),
             Expanded(
               child: LayoutBuilder(
                 builder: (context, constraints) => Obx(() {
@@ -120,7 +123,7 @@ class CalendarPage extends StatelessWidget {
                                   calendarBottom -
                                   listGap) /
                               rows)
-                          .clamp(0.0, 48.0)
+                          .clamp(0.0, constraints.maxHeight < 680 ? 42.0 : 48.0)
                           .toDouble();
                   final calendar = Padding(
                     padding: const EdgeInsets.only(
@@ -397,7 +400,8 @@ class CalendarPage extends StatelessWidget {
   }
 
   Widget createCard(context, Period period) {
-    return RoundRectangleCard(
+    return RoundRectangleCard.content(
+      animate: false,
       onTap:
           (period.type == PeriodType.classes || period.type == PeriodType.test)
               ? () async => Navigator.of(context, rootNavigator: true).push(
@@ -418,122 +422,62 @@ class CalendarPage extends StatelessWidget {
                       }
                     })
                   : null),
-      child: Padding(
-        padding: const EdgeInsets.only(left: 8, right: 8),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 12.0,
-                        height: 12.0,
-                        decoration: customDecoration(
-                          color: period.type == PeriodType.classes
-                              ? (TimeColors.colorFromHour(
-                                  period.startTime.hour))
-                              : (period.type == PeriodType.test
-                                  ? CupertinoColors.systemPink
-                                  : (period.type == PeriodType.user &&
-                                          period.fromUid != null
-                                      ? UidColors.colorFromUid(
-                                          period.fromFromUid ?? period.fromUid)
-                                      : CupertinoColors.inactiveGray)),
-                          shape: periodTypeShape[period.type]!,
-                        ),
-                      ),
-                      const SizedBox(width: 8.0),
-                      Expanded(
-                        child: Text(
-                          period.summary,
-                          style: CupertinoTheme.of(context)
-                              .textTheme
-                              .textStyle
-                              .copyWith(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4.0),
-                  Row(
-                    children: [
-                      Icon(
-                        CupertinoIcons.time_solid,
-                        size: 14,
-                        color: CupertinoTheme.of(context)
-                            .textTheme
-                            .textStyle
-                            .color!
-                            .withValues(alpha: 0.5),
-                      ),
-                      const SizedBox(width: 6.0),
-                      Expanded(
-                        child: Text(
-                          '时间：${period.friendlyTimeStartDayBased}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.normal,
-                            color: CupertinoTheme.of(context)
-                                .textTheme
-                                .textStyle
-                                .color!
-                                .withValues(alpha: 0.75),
-                            overflow: TextOverflow.ellipsis,
+      child: Row(
+        spacing: 10,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 5,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: 7,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 5),
+                      child: SizedBox.square(
+                        dimension: 11,
+                        child: DecoratedBox(
+                          decoration: customDecoration(
+                            color: switch (period.type) {
+                              PeriodType.classes =>
+                                TimeColors.colorFromHour(period.startTime.hour),
+                              PeriodType.test => CupertinoColors.systemPink,
+                              PeriodType.user when period.fromUid != null =>
+                                UidColors.colorFromUid(
+                                    period.fromFromUid ?? period.fromUid),
+                              _ => CupertinoColors.inactiveGray,
+                            },
+                            shape: periodTypeShape[period.type]!,
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                  if (period.location.isNotEmpty) ...[
-                    Row(
-                      children: [
-                        Icon(
-                          CupertinoIcons.location_solid,
-                          size: 14,
-                          color: CupertinoTheme.of(context)
-                              .textTheme
-                              .textStyle
-                              .color!
-                              .withValues(alpha: 0.5),
-                        ),
-                        const SizedBox(width: 6.0),
-                        Expanded(
-                          child: Text(
-                            '地点：${period.location}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.normal,
-                              color: CupertinoTheme.of(context)
-                                  .textTheme
-                                  .textStyle
-                                  .color!
-                                  .withValues(alpha: 0.75),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
-                      ],
+                    ),
+                    Expanded(
+                      child: Text(
+                        period.summary,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
                     ),
                   ],
-                ],
-              ),
+                ),
+                CardDetailLine(
+                    CupertinoIcons.clock, period.friendlyTimeStartDayBased,
+                    emphasis: true),
+                if (period.location.isNotEmpty)
+                  CardDetailLine(CupertinoIcons.location, period.location),
+              ],
             ),
-            Icon(CupertinoIcons.chevron_right,
-                size: 14,
-                color: CupertinoTheme.of(context)
-                    .textTheme
-                    .textStyle
-                    .color!
-                    .withValues(alpha: 0.5))
-          ],
-        ),
+          ),
+          if (period.type == PeriodType.classes ||
+              period.type == PeriodType.test ||
+              period.type == PeriodType.user)
+            const CupertinoListTileChevron(),
+        ],
       ),
     );
   }
