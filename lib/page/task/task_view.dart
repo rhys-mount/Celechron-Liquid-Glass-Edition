@@ -545,12 +545,10 @@ class TaskPage extends StatelessWidget {
               largeTitle: const Text('任务'),
               border: null,
               stretch: true,
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                spacing: 6,
-                children: <Widget>[
-                  NavigationAction(
-                    icon: CupertinoIcons.add_circled,
+              trailing: NavigationActionGroup(
+                actions: [
+                  (
+                    icon: CupertinoIcons.add,
                     label: '添加任务',
                     onPressed: () async {
                       await newDeadline(context);
@@ -558,8 +556,8 @@ class TaskPage extends StatelessWidget {
                       _taskController.taskList.refresh();
                     },
                   ),
-                  NavigationAction(
-                    icon: CupertinoIcons.ellipsis_circle,
+                  (
+                    icon: CupertinoIcons.ellipsis,
                     label: '更多任务操作',
                     onPressed: () async {
                       await showCupertinoModalPopup(

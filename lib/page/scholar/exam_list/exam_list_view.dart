@@ -278,7 +278,8 @@ class _ExamListPageState extends State<ExamListPage> {
               size: 14,
             ),
           ),
-          Padding(
+          Flexible(
+            child: Padding(
               padding: EdgeInsets.only(left: 4, top: 4, bottom: 4),
               child: Text('请务必前往教务网核对',
                   style: TextStyle(
@@ -286,7 +287,9 @@ class _ExamListPageState extends State<ExamListPage> {
                     fontWeight: FontWeight.bold,
                     overflow: TextOverflow.ellipsis,
                     color: CupertinoColors.white,
-                  )))
+                  )),
+            ),
+          ),
         ]),
         foreheadColor: CupertinoColors.systemRed,
         child: Column(children: [
@@ -333,10 +336,14 @@ class _ExamListPageState extends State<ExamListPage> {
             subtitle: '考试',
           ),
           SliverPinnedToBoxAdapter(
-            child: Padding(
-                padding: const EdgeInsets.only(
-                    left: 16, right: 16, bottom: 10, top: 10),
-                child: _semesterPicker(context)),
+            child: ColoredBox(
+              color: CupertinoDynamicColor.resolve(
+                  CupertinoColors.systemGroupedBackground, context),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+                child: _semesterPicker(context),
+              ),
+            ),
           ),
           Obx(() => SliverList(
                 delegate: SliverChildBuilderDelegate(

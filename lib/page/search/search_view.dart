@@ -13,50 +13,60 @@ class SearchPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final background = CupertinoDynamicColor.resolve(
+        CupertinoColors.systemGroupedBackground, context);
     return CupertinoPageScaffold(
-        backgroundColor: CupertinoDynamicColor.resolve(
-            CupertinoColors.systemGroupedBackground, context),
+        backgroundColor: background,
         child: SafeArea(
             child: CustomScrollView(slivers: [
           SliverPinnedToBoxAdapter(
+            child: ColoredBox(
+              color: background,
               child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Column(children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: CupertinoSearchTextField(
-                            placeholder: '搜索课程、事项...',
-                            placeholderStyle: CupertinoTheme.of(context)
-                                .textTheme
-                                .textStyle
-                                .copyWith(
-                                    color: CupertinoColors.systemGrey,
-                                    height: 1.25,
-                                    fontSize: 18),
-                            style: CupertinoTheme.of(context)
-                                .textTheme
-                                .textStyle
-                                .copyWith(height: 1.25, fontSize: 18),
-                            borderRadius: BorderRadius.circular(12),
-                            itemColor: CupertinoColors.systemGrey,
-                            itemSize: 20,
-                            suffixInsets: const EdgeInsetsDirectional.fromSTEB(
-                                0, 0, 5, 0),
-                            prefixInsets: const EdgeInsetsDirectional.fromSTEB(
-                                10, 0, 0, 0),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 8),
-                            onChanged: (String value) {
-                              _searchController.searchWord.value = value;
-                            },
-                            autofocus: true,
-                          ),
-                        ),
-                      ],
-                    )
-                  ]))),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  spacing: 8,
+                  children: [
+                    Expanded(
+                      child: CupertinoSearchTextField(
+                        placeholder: '搜索课程、事项...',
+                        placeholderStyle: CupertinoTheme.of(context)
+                            .textTheme
+                            .textStyle
+                            .copyWith(
+                                color: CupertinoColors.systemGrey,
+                                height: 1.25,
+                                fontSize: 18),
+                        style: CupertinoTheme.of(context)
+                            .textTheme
+                            .textStyle
+                            .copyWith(height: 1.25, fontSize: 18),
+                        borderRadius: BorderRadius.circular(12),
+                        itemColor: CupertinoColors.systemGrey,
+                        itemSize: 20,
+                        suffixInsets:
+                            const EdgeInsetsDirectional.fromSTEB(0, 0, 5, 0),
+                        prefixInsets:
+                            const EdgeInsetsDirectional.fromSTEB(10, 0, 0, 0),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 8),
+                        onChanged: (String value) {
+                          _searchController.searchWord.value = value;
+                        },
+                        autofocus: true,
+                      ),
+                    ),
+                    CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      onPressed: () => Navigator.of(context).maybePop(),
+                      child: const Text('取消'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
           Obx(() => SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) => Container(

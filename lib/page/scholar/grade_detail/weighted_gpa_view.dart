@@ -4,6 +4,7 @@ import 'package:celechron/design/custom_colors.dart';
 import 'package:celechron/design/round_rectangle_card.dart';
 import 'package:celechron/design/two_line_card.dart';
 import 'package:celechron/design/persistent_headers.dart';
+import 'package:celechron/design/liquid_glass/navigation_action.dart';
 import 'package:celechron/page/scholar/grade_detail/weighted_gpa_controller.dart';
 
 /// 加权绩点页面
@@ -156,37 +157,25 @@ class WeightedGpaPage extends StatelessWidget {
           slivers: [
             CelechronSliverTextHeader(
               subtitle: '加权成绩',
-              right: Obx(
-                () => Padding(
-                  padding: const EdgeInsets.only(right: 18),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CupertinoButton(
-                        padding: EdgeInsets.zero,
-                        child: const Text(
-                          '重置',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                        onPressed: () {
-                          _controller.weightedMap.value = {};
-                          _controller.refreshWeightedGpa();
-                        },
-                      ),
-                      CupertinoButton(
-                        padding: EdgeInsets.zero,
-                        child: Text(
-                          _controller.showAllSemesters.value ? '按学期' : '全选',
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                        onPressed: () {
-                          _controller.showAllSemesters.value =
-                              !_controller.showAllSemesters.value;
-                        },
-                      ),
-                    ],
+              right: Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: 6,
+                children: [
+                  NavigationAction.text(
+                    label: '重置',
+                    onPressed: () {
+                      _controller.weightedMap.value = {};
+                      _controller.refreshWeightedGpa();
+                    },
                   ),
-                ),
+                  NavigationAction.text(
+                    label: _controller.showAllSemesters.value ? '按学期' : '全部学期',
+                    onPressed: () {
+                      _controller.showAllSemesters.value =
+                          !_controller.showAllSemesters.value;
+                    },
+                  ),
+                ],
               ),
             ),
             SliverToBoxAdapter(

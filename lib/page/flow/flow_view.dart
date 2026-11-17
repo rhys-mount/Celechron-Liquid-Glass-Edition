@@ -582,7 +582,7 @@ class FlowPage extends StatelessWidget {
               stretch: true,
               border: null,
               trailing: NavigationAction(
-                icon: CupertinoIcons.refresh_circled,
+                icon: CupertinoIcons.arrow_clockwise,
                 label: '重新规划',
                 onPressed: () async {
                   await newFlowList(context);

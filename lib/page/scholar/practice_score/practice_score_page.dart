@@ -1,4 +1,5 @@
 import 'package:celechron/design/multiple_columns.dart';
+import 'package:celechron/design/persistent_headers.dart';
 import 'package:celechron/model/practice_score_item.dart';
 import 'package:celechron/model/scholar.dart';
 import 'package:flutter/cupertino.dart';
@@ -96,59 +97,62 @@ class PracticeScorePage extends StatelessWidget {
         items.where((item) => !item.countsTowardTotal).toList(growable: false);
 
     return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        middle: Text('$_categoryName项目'),
-      ),
       backgroundColor: CupertinoDynamicColor.resolve(
         CupertinoColors.systemGroupedBackground,
         context,
       ),
       child: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-          children: [
-            _SummaryCard(
-              categoryName: _categoryName,
-              total: switch (categoryId) {
-                1 => scholar.pt2,
-                2 => scholar.pt3,
-                3 => scholar.pt4,
-                _ => 0,
-              },
-              includedCount: included.length,
-              excludedCount: excluded.length,
-              source: scholar.practiceSummarySource,
-              detailSource: scholar.practiceDataSource,
-              updatedAt: scholar.practiceUpdatedAt,
-              stale: scholar.practiceSummaryStale,
-              detailsStale: scholar.practiceDetailsStale,
+        top: false,
+        child: CustomScrollView(
+          slivers: [
+            CelechronSliverTextHeader(subtitle: '$_categoryName项目'),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+              sliver: SliverList.list(children: [
+                _SummaryCard(
+                  categoryName: _categoryName,
+                  total: switch (categoryId) {
+                    1 => scholar.pt2,
+                    2 => scholar.pt3,
+                    3 => scholar.pt4,
+                    _ => 0,
+                  },
+                  includedCount: included.length,
+                  excludedCount: excluded.length,
+                  source: scholar.practiceSummarySource,
+                  detailSource: scholar.practiceDataSource,
+                  updatedAt: scholar.practiceUpdatedAt,
+                  stale: scholar.practiceSummaryStale,
+                  detailsStale: scholar.practiceDetailsStale,
+                ),
+                const SizedBox(height: 16),
+                if (!scholar.practiceDetailsAvailable)
+                  _NoDetailsCard(source: scholar.practiceDataSource)
+                else ...[
+                  _SectionTitle(title: '已计入总分', count: included.length),
+                  if (included.isEmpty)
+                    const _EmptyGroup(text: '暂无已计入总分的项目')
+                  else
+                    ...included.map(
+                      (item) => _PracticeItemCard(
+                        item: item,
+                        onTap: () => _openDetail(context, item),
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                  _SectionTitle(title: '审核中或未计入', count: excluded.length),
+                  if (excluded.isEmpty)
+                    const _EmptyGroup(text: '暂无审核中或未计入的项目')
+                  else
+                    ...excluded.map(
+                      (item) => _PracticeItemCard(
+                        item: item,
+                        onTap: () => _openDetail(context, item),
+                      ),
+                    ),
+                ],
+              ]),
             ),
-            const SizedBox(height: 16),
-            if (!scholar.practiceDetailsAvailable)
-              _NoDetailsCard(source: scholar.practiceDataSource)
-            else ...[
-              _SectionTitle(title: '已计入总分', count: included.length),
-              if (included.isEmpty)
-                const _EmptyGroup(text: '暂无已计入总分的项目')
-              else
-                ...included.map(
-                  (item) => _PracticeItemCard(
-                    item: item,
-                    onTap: () => _openDetail(context, item),
-                  ),
-                ),
-              const SizedBox(height: 12),
-              _SectionTitle(title: '审核中或未计入', count: excluded.length),
-              if (excluded.isEmpty)
-                const _EmptyGroup(text: '暂无审核中或未计入的项目')
-              else
-                ...excluded.map(
-                  (item) => _PracticeItemCard(
-                    item: item,
-                    onTap: () => _openDetail(context, item),
-                  ),
-                ),
-            ],
           ],
         ),
       ),
@@ -188,35 +192,41 @@ class PracticeScoreDetailPage extends StatelessWidget {
       ('最近更新时间', _dateTime(item.updatedAt)),
     ];
     return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(middle: Text('实践项目详情')),
       backgroundColor: CupertinoDynamicColor.resolve(
         CupertinoColors.systemGroupedBackground,
         context,
       ),
       child: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-          children: [
-            _Card(
-              child: Column(
-                children: [
-                  for (var index = 0; index < rows.length; index++) ...[
-                    _DetailRow(label: rows[index].$1, value: rows[index].$2),
-                    if (index != rows.length - 1) const _Divider(),
-                  ],
-                ],
-              ),
-            ),
-            if (!item.countsTowardTotal) ...[
-              const SizedBox(height: 12),
-              const Text(
-                '该项目当前未计入总分。',
-                style: TextStyle(
-                  color: CupertinoColors.systemOrange,
-                  fontSize: 14,
+        top: false,
+        child: CustomScrollView(
+          slivers: [
+            const CelechronSliverTextHeader(subtitle: '实践项目详情'),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+              sliver: SliverList.list(children: [
+                _Card(
+                  child: Column(
+                    children: [
+                      for (var index = 0; index < rows.length; index++) ...[
+                        _DetailRow(
+                            label: rows[index].$1, value: rows[index].$2),
+                        if (index != rows.length - 1) const _Divider(),
+                      ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                if (!item.countsTowardTotal) ...[
+                  const SizedBox(height: 12),
+                  const Text(
+                    '该项目当前未计入总分。',
+                    style: TextStyle(
+                      color: CupertinoColors.systemOrange,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ]),
+            ),
           ],
         ),
       ),

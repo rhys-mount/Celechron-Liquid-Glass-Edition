@@ -816,41 +816,20 @@ class ScholarPage extends StatelessWidget {
             CupertinoColors.systemGroupedBackground, context),*/
         child: CustomScrollView(
       slivers: [
+        const CupertinoSliverNavigationBar(
+          largeTitle: Text('学业'),
+          border: null,
+          stretch: true,
+        ),
         SliverPinnedToBoxAdapter(
-            child: Container(
-          decoration: BoxDecoration(
-            color: CupertinoDynamicColor.resolve(
-                CupertinoColors.systemBackground, context),
-            /*boxShadow: [
-              BoxShadow(
-                color: CupertinoDynamicColor.resolve(
-                    CupertinoColors.systemGrey5, context),
-                offset: const Offset(0, 0),
-                blurRadius: 4,
-              ),
-            ],
-            borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(16)),*/
-          ),
+            child: ColoredBox(
+          color: CupertinoDynamicColor.resolve(
+              CupertinoColors.systemBackground, context),
           child: Padding(
-              padding: EdgeInsets.only(
-                  left: 16,
-                  right: 16,
-                  bottom: 4,
-                  top: 8 + MediaQuery.of(context).padding.top),
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
               child: Column(children: [
                 Row(
                   children: [
-                    const SizedBox(width: 2),
-                    Text(
-                      '学业',
-                      style: CupertinoTheme.of(context)
-                          .textTheme
-                          .navLargeTitleTextStyle
-                          .copyWith(fontSize: 24),
-                    ),
-                    const SizedBox(width: 12),
                     Expanded(child: _buildSearchLauncher(context)),
                     if (PlatformFeatures.isDesktop)
                       ValueListenableBuilder(

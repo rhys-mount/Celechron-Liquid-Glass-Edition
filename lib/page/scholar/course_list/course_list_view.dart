@@ -66,9 +66,14 @@ class CourseListPage extends StatelessWidget {
         slivers: [
           const CelechronSliverTextHeader(subtitle: '课程'),
           SliverPinnedToBoxAdapter(
-            child: Padding(
-                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 10),
-                child: Obx(() => _semesterPicker(context))),
+            child: ColoredBox(
+              color: CupertinoDynamicColor.resolve(
+                  CupertinoColors.systemGroupedBackground, context),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+                child: Obx(() => _semesterPicker(context)),
+              ),
+            ),
           ),
           Obx(() => SliverList(
                 delegate: SliverChildBuilderDelegate(

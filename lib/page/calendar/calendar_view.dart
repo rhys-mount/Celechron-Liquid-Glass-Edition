@@ -51,7 +51,7 @@ class CalendarPage extends StatelessWidget {
                     if (_calendarController.viewMode.value ==
                         CalendarViewMode.calendar) ...[
                       NavigationAction(
-                        icon: CupertinoIcons.add_circled,
+                        icon: CupertinoIcons.add,
                         label: '添加日程或任务',
                         onPressed: () async {
                           await newDeadline(

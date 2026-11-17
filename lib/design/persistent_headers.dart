@@ -1,150 +1,35 @@
-import 'dart:ui';
-
 import 'package:flutter/cupertino.dart';
 
 import 'liquid_glass/navigation_action.dart';
 
 class CelechronSliverTextHeader extends StatelessWidget {
-  final String subtitle;
-  final Widget? right;
-  final Widget? bottom;
-  final double fontSize;
-  final bool firstPage;
-
   const CelechronSliverTextHeader({
     super.key,
     required this.subtitle,
     this.right,
-    this.bottom,
-    this.fontSize = 20,
-    this.firstPage = false,
   });
+
+  final String subtitle;
+  final Widget? right;
 
   @override
   Widget build(BuildContext context) {
-    return SliverPersistentHeader(
-      pinned: true,
-      delegate: CelechronHeader(
-        fontSize: fontSize,
-        firstPage: firstPage,
-        subtitle: subtitle,
-        right: right,
-        bottom: bottom,
-        padding: MediaQuery.of(context).padding.top,
-      ),
+    void goBack() => Navigator.of(context).maybePop();
+
+    return CupertinoSliverNavigationBar(
+      largeTitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
+      alwaysShowMiddle: false,
+      border: null,
+      stretch: true,
+      leading: ModalRoute.of(context)?.canPop == true
+          ? NavigationAction(
+              icon: CupertinoIcons.back,
+              label: '返回',
+              onPressed: goBack,
+              fallback: CupertinoNavigationBarBackButton(onPressed: goBack),
+            )
+          : null,
+      trailing: right,
     );
-  }
-}
-
-class CelechronHeader extends SliverPersistentHeaderDelegate {
-  final String subtitle;
-  final Widget? bottom;
-  final Widget? right;
-  final double padding;
-  final double fontSize;
-  final bool firstPage;
-
-  CelechronHeader({
-    required this.subtitle,
-    this.right,
-    this.bottom,
-    required this.padding,
-    this.fontSize = 20,
-    this.firstPage = false,
-  });
-
-  @override
-  Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
-    void goBack() => Navigator.of(context).pop();
-
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(
-            sigmaX: shrinkOffset > 12 ? 10 : shrinkOffset / 1.2,
-            sigmaY: shrinkOffset > 12 ? 10 : shrinkOffset / 1.2),
-        child: Container(
-          padding: EdgeInsets.only(top: padding),
-          color: shrinkOffset > 12
-              ? CupertinoDynamicColor.resolve(
-                      CupertinoColors.systemBackground, context)
-                  .withValues(alpha: 0.5)
-              : CupertinoDynamicColor.resolve(
-                      CupertinoColors.systemBackground, context)
-                  .withValues(alpha: shrinkOffset / 24),
-          child: Column(
-            children: [
-              Stack(
-                children: [
-                  // Back button if not first page
-                  if (!firstPage)
-                    Container(
-                      alignment: Alignment.centerLeft,
-                      child: NavigationAction(
-                        icon: CupertinoIcons.back,
-                        label: '返回',
-                        onPressed: goBack,
-                        fallback: CupertinoButton(
-                          padding: const EdgeInsets.only(left: 2),
-                          onPressed: goBack,
-                          child: Icon(
-                            CupertinoIcons.back,
-                            semanticLabel: '返回',
-                            color: CupertinoDynamicColor.resolve(
-                                CupertinoColors.label, context),
-                          ),
-                        ),
-                      ),
-                    ),
-                  // Title at the center
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Container(
-                        alignment: Alignment.center,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Hero(
-                          tag: subtitle,
-                          child: Column(
-                            children: [
-                              Text(
-                                subtitle,
-                                style: CupertinoTheme.of(context)
-                                    .textTheme
-                                    .navTitleTextStyle
-                                    .copyWith(
-                                      fontSize:
-                                          fontSize - (bottom == null ? 0 : 2),
-                                    ),
-                              ),
-                              if (bottom != null) bottom!,
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  // Right button
-                  if (right != null)
-                    Container(alignment: Alignment.centerRight, child: right),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  double get minExtent => 48 + padding + (bottom == null ? 0 : 48);
-
-  @override
-  double get maxExtent => 48 + padding + (bottom == null ? 0 : 48);
-
-  @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
-    return true;
   }
 }
