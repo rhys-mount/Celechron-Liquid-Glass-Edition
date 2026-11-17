@@ -10,9 +10,8 @@ class CardDetailLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color =
-        (emphasis ? CupertinoColors.label : CupertinoColors.secondaryLabel)
-            .resolveFrom(context);
+    final foreground = CupertinoColors.label.resolveFrom(context);
+    final color = emphasis ? foreground : foreground.withValues(alpha: 0.68);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,

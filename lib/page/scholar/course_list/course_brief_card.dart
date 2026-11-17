@@ -36,8 +36,11 @@ class CourseBriefCard extends StatelessWidget {
                 course.name,
                 maxLines: allowDirect ? 2 : null,
                 overflow: allowDirect ? TextOverflow.ellipsis : null,
-                style:
-                    const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  color: CupertinoColors.label.resolveFrom(context),
+                ),
               ),
             ),
             Text(

@@ -664,7 +664,8 @@ class _TaskEditPageState extends State<TaskEditPage> {
                   header: const Text('附加信息'),
                   children: [
                     CupertinoTextFormFieldRow(
-                      placeholder: '地点',
+                      prefix: const Text('地点'),
+                      placeholder: '选填',
                       textAlign: TextAlign.left,
                       controller: _location,
                       onChanged: (String value) {
@@ -672,7 +673,8 @@ class _TaskEditPageState extends State<TaskEditPage> {
                       },
                     ),
                     CupertinoTextFormFieldRow(
-                      placeholder: '说明',
+                      prefix: const Text('说明'),
+                      placeholder: '选填',
                       textAlign: TextAlign.left,
                       controller: _description,
                       maxLines: 6,
