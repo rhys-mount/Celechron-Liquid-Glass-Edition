@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show defaultTargetPlatform;
-import 'package:flutter/material.dart' show Icons;
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import 'glass_appearance.dart';
@@ -9,7 +8,7 @@ const _tabs = [
   (icon: CupertinoIcons.time, label: '接下来'),
   (icon: CupertinoIcons.calendar, label: '日程'),
   (icon: CupertinoIcons.check_mark, label: '任务'),
-  (icon: Icons.school_rounded, label: '学业'),
+  (icon: CupertinoIcons.book, label: '学业'),
   (icon: CupertinoIcons.settings, label: '设置'),
 ];
 

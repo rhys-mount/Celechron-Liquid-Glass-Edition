@@ -42,9 +42,11 @@ void main() {
     WidgetTester tester,
     WidgetBuilder builder, {
     Brightness brightness = Brightness.light,
+    double width = 360,
+    double textScale = 1.2,
   }) async {
     tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(360, 700);
+    tester.view.physicalSize = Size(width, 700);
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.view.resetPhysicalSize);
     await tester.pumpWidget(CupertinoApp(
@@ -52,7 +54,7 @@ void main() {
       builder: (context, child) => MediaQuery(
         data: MediaQuery.of(context).copyWith(
           padding: const EdgeInsets.only(top: 24, bottom: 24),
-          textScaler: const TextScaler.linear(1.2),
+          textScaler: TextScaler.linear(textScale),
         ),
         child: child!,
       ),
@@ -124,6 +126,35 @@ void main() {
     } finally {
       semantics.dispose();
     }
+  });
+
+  testWidgets('小屏大字号课程卡可打开长标题、课时和考场', (tester) async {
+    final course = Get.find<Rx<Scholar>>(tag: 'scholar')
+        .value
+        .semesters
+        .first
+        .courses[academicCourseId]!;
+    const title = '数字信号处理与面向真实场景的跨学期综合设计实验';
+    course
+      ..name = title
+      ..teacher = '课程教学与实验指导团队';
+    await openPage(
+      tester,
+      (_) => CourseListPage(initialSemesterName: academicSemester),
+      brightness: Brightness.dark,
+      width: 320,
+      textScale: 1.5,
+    );
+    final heading = find.text(title).hitTestable();
+    expect(heading, findsOneWidget);
+    await tester.tap(heading);
+    await tester.pumpAndSettle();
+    expect(find.text('基本信息'), findsOneWidget);
+    expect(find.text('教师 课程教学与实验指导团队'), findsOneWidget);
+    expect(find.text('课时'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('地点 演示考场 01').hitTestable(), 150);
+    expect(find.text('地点 演示考场 01').hitTestable(), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('考试列表有数据时切换学期并保留核对提示', (tester) async {

@@ -8,8 +8,7 @@ import 'package:celechron/model/exam.dart';
 import 'package:celechron/design/sub_title.dart';
 import 'package:celechron/design/persistent_headers.dart';
 import 'package:celechron/design/round_rectangle_card.dart';
-import 'package:celechron/design/animate_button.dart';
-import 'package:celechron/design/custom_colors.dart';
+import 'package:celechron/design/semester_chips.dart';
 
 import 'exam_list_controller.dart';
 
@@ -292,37 +291,19 @@ class _ExamListPageState extends State<ExamListPage> {
           ),
         ]),
         foreheadColor: CupertinoColors.systemRed,
-        child: Column(children: [
-          Row(children: [
-            Expanded(
-              child: SizedBox(
-                height: 30,
-                child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _examListController.semesters.length,
-                    itemBuilder: (context, index) {
-                      final semester = _examListController.semesters[index];
-                      return Obx(() => Stack(children: [
-                            AnimateButton(
-                              text:
-                                  '${semester.name.substring(2, 5)}${semester.name.substring(7, 11)}',
-                              onTap: () {
-                                _examListController.semesterIndex.value = index;
-                                _examListController.semesterIndex.refresh();
-                              },
-                              backgroundColor:
-                                  _examListController.semesterIndex.value ==
-                                          index
-                                      ? CustomCupertinoDynamicColors.cyan
-                                      : CupertinoColors.systemFill,
-                            ),
-                            const SizedBox(width: 90),
-                          ]));
-                    }),
-              ),
-            ),
-          ]),
-        ]));
+        child: Obx(
+          () => SemesterChips(
+            names: [
+              for (final semester in _examListController.semesters)
+                semester.name
+            ],
+            selectedIndex: _examListController.semesterIndex.value,
+            onSelected: (index) {
+              _examListController.semesterIndex.value = index;
+              _examListController.semesterIndex.refresh();
+            },
+          ),
+        ));
   }
 
   @override

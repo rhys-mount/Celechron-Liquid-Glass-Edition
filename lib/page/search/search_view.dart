@@ -2,6 +2,7 @@
 import 'package:extended_sliver/extended_sliver.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:celechron/page/scholar/course_list/course_brief_card.dart';
+import 'package:celechron/design/content_empty_state.dart';
 import 'package:get/get.dart';
 
 import 'search_controller.dart';
@@ -67,22 +68,28 @@ class SearchPage extends StatelessWidget {
               ),
             ),
           ),
-          Obx(() => SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => Container(
-                    padding: index == 0
-                        ? const EdgeInsets.only(
-                            top: 0, bottom: 5, left: 16, right: 16)
-                        : const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 5),
-                    child: CourseBriefCard(
-                      course: _searchController.courseResult[index],
-                      allowDirect: true,
-                    ),
-                  ),
-                  childCount: _searchController.courseResult.length,
+          Obx(() {
+            final courses = _searchController.courseResult;
+            if (courses.isEmpty &&
+                _searchController.searchWord.value.isNotEmpty) {
+              return const SliverToBoxAdapter(
+                child: ContentEmptyState(
+                  icon: CupertinoIcons.search,
+                  title: '没有匹配的课程',
                 ),
-              )),
+              );
+            }
+            return SliverList.builder(
+              itemCount: courses.length,
+              itemBuilder: (context, index) => Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: CourseBriefCard(
+                  course: courses[index],
+                  allowDirect: true,
+                ),
+              ),
+            );
+          }),
         ])));
   }
 }

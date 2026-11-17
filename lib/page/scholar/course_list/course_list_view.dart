@@ -5,10 +5,8 @@ import 'package:get/get.dart';
 
 import 'package:celechron/page/scholar/course_list/course_brief_card.dart';
 import 'package:celechron/design/persistent_headers.dart';
-import 'package:celechron/design/round_rectangle_card.dart';
-
-import 'package:celechron/design/animate_button.dart';
-import 'package:celechron/design/custom_colors.dart';
+import 'package:celechron/design/semester_chips.dart';
+import 'package:celechron/design/content_empty_state.dart';
 import 'course_list_controller.dart';
 
 class CourseListPage extends StatelessWidget {
@@ -20,40 +18,18 @@ class CourseListPage extends StatelessWidget {
         Get.put(CourseListController(initialName: initialSemesterName));
   }
 
-  Widget _semesterPicker(BuildContext context) {
-    return RoundRectangleCard(
-      animate: false,
-      child: Column(children: [
-        Row(children: [
-          Expanded(
-            child: SizedBox(
-              height: 30,
-              child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _courseListController.semesters.length,
-                  itemBuilder: (context, index) {
-                    final semester = _courseListController.semesters[index];
-                    return Obx(() => Stack(children: [
-                          AnimateButton(
-                            text:
-                                '${semester.name.substring(2, 5)}${semester.name.substring(7, 11)}',
-                            onTap: () {
-                              _courseListController.semesterIndex.value = index;
-                              _courseListController.semesterIndex.refresh();
-                            },
-                            backgroundColor:
-                                _courseListController.semesterIndex.value ==
-                                        index
-                                    ? CustomCupertinoDynamicColors.cyan
-                                    : CupertinoColors.systemFill,
-                          ),
-                          const SizedBox(width: 90),
-                        ]));
-                  }),
-            ),
-          ),
-        ]),
-      ]),
+  Widget _semesterPicker() {
+    return Obx(
+      () => SemesterChips(
+        names: [
+          for (final semester in _courseListController.semesters) semester.name
+        ],
+        selectedIndex: _courseListController.semesterIndex.value,
+        onSelected: (index) {
+          _courseListController.semesterIndex.value = index;
+          _courseListController.semesterIndex.refresh();
+        },
+      ),
     );
   }
 
@@ -71,55 +47,36 @@ class CourseListPage extends StatelessWidget {
                   CupertinoColors.systemGroupedBackground, context),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
-                child: Obx(() => _semesterPicker(context)),
+                child: _semesterPicker(),
               ),
             ),
           ),
-          Obx(() => SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => Container(
-                    padding: index == 0
-                        ? const EdgeInsets.only(
-                            top: 0, bottom: 5, left: 16, right: 16)
-                        : const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 5),
-                    child: CourseBriefCard(
-                      course: _courseListController.courses[index],
-                      allowDirect: true,
-                    ),
-                  ),
-                  childCount: _courseListController.courses.length,
+          Obx(() {
+            final courses = _courseListController.courses;
+            if (courses.isEmpty) {
+              return const SliverToBoxAdapter(
+                child: ContentEmptyState(
+                  icon: CupertinoIcons.book,
+                  title: '这个学期暂无课程',
                 ),
-              )),
+              );
+            }
+            return SliverList.builder(
+              itemCount: courses.length,
+              itemBuilder: (context, index) => Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: CourseBriefCard(
+                  course: courses[index],
+                  allowDirect: true,
+                ),
+              ),
+            );
+          }),
+          SliverToBoxAdapter(
+            child: SizedBox(height: MediaQuery.paddingOf(context).bottom + 12),
+          ),
         ],
       ),
     );
   }
 }
-
-/*class _SemesterPickerPersistentHeaderBuilder extends SliverPersistentHeaderDelegate {
-
-  final StatelessWidget child;
-
-  _SemesterPickerPersistentHeaderBuilder(this.child);
-
-  @override
-  Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Padding(
-        padding: const EdgeInsets.only(left: 16, right:16, bottom: 10),
-        child: child);
-  }
-
-  // min and max extents are both determined by child size
-  @override
-  double get minExtent => child;
-
-  @override
-  double get maxExtent =>
-
-  @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
-    return false;
-  }
-}*/

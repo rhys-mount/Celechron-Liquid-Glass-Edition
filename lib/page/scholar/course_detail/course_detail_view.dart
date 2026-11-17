@@ -1,16 +1,13 @@
-import 'package:celechron/page/scholar/course_list/course_brief_card.dart';
-import 'package:celechron/design/sub_title.dart';
+import 'package:celechron/design/card_detail_line.dart';
 import 'package:celechron/design/custom_colors.dart';
 import 'package:celechron/design/persistent_headers.dart';
 import 'package:celechron/design/round_rectangle_card.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:celechron/model/course.dart';
-
 import 'package:celechron/model/exam.dart';
-import 'package:celechron/model/session.dart';
 import 'package:celechron/model/scholar.dart';
+import 'package:celechron/page/scholar/course_list/course_brief_card.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:get/get.dart';
 
 class CourseDetailPage extends StatelessWidget {
   final _scholar = Get.find<Rx<Scholar>>(tag: 'scholar');
@@ -22,415 +19,171 @@ class CourseDetailPage extends StatelessWidget {
         .courses[courseId]!;
   }
 
-  Widget createSessionCard(context, List<Session> sessions) {
-    sessions.sort((a, b) => a.time.first.compareTo(b.time.first));
-    return Column(
-      children: [
-        SubSubtitleRow(subtitle: '课时'),
-        RoundRectangleCard(
-            child: Padding(
-          padding: const EdgeInsets.only(left: 8, right: 8),
-          child: Column(children: [
-            Row(
-              children: [
-                Expanded(
-                    child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Column(
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 12.0,
-                              height: 12.0,
-                              decoration: BoxDecoration(
-                                color: TimeColors.colorFromClass(
-                                    sessions[0].time.first),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 8.0),
-                            Expanded(
-                                child: Text(sessions[0].chineseTime,
-                                    style: CupertinoTheme.of(context)
-                                        .textTheme
-                                        .textStyle
-                                        .copyWith(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          overflow: TextOverflow.ellipsis,
-                                        ))),
-                          ],
-                        ),
-                        const SizedBox(height: 4.0),
-                        Row(children: [
-                          Icon(
-                            CupertinoIcons.location_solid,
-                            size: 14,
-                            color: CupertinoTheme.of(context)
-                                .textTheme
-                                .textStyle
-                                .color!
-                                .withValues(alpha: 0.5),
-                          ),
-                          Expanded(
-                              child: Text(' 地点：${sessions[0].location ?? '未知'}',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.normal,
-                                    color: CupertinoTheme.of(context)
-                                        .textTheme
-                                        .textStyle
-                                        .color!
-                                        .withValues(alpha: 0.75),
-                                    overflow: TextOverflow.ellipsis,
-                                  )))
-                        ]),
-                      ],
-                    ),
-                    for (var i = 1; i < sessions.length; i++)
-                      Column(
-                        children: [
-                          Divider(
-                            height: 24,
-                            thickness: 1,
-                            indent: 0,
-                            endIndent: 0,
-                            color: CupertinoDynamicColor.resolve(
-                                CupertinoColors.systemFill, context),
-                          ),
-                          Row(
-                            children: [
-                              Container(
-                                width: 12.0,
-                                height: 12.0,
-                                decoration: BoxDecoration(
-                                  color: TimeColors.colorFromClass(
-                                      sessions[i].time.first),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 8.0),
-                              Expanded(
-                                  child: Text(sessions[i].chineseTime,
-                                      style: CupertinoTheme.of(context)
-                                          .textTheme
-                                          .textStyle
-                                          .copyWith(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            overflow: TextOverflow.ellipsis,
-                                          ))),
-                            ],
-                          ),
-                          const SizedBox(height: 4.0),
-                          Row(children: [
-                            Icon(
-                              CupertinoIcons.location_solid,
-                              size: 14,
-                              color: CupertinoTheme.of(context)
-                                  .textTheme
-                                  .textStyle
-                                  .color!
-                                  .withValues(alpha: 0.5),
-                            ),
-                            Expanded(
-                                child:
-                                    Text(' 地点：${sessions[i].location ?? '未知'}',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.normal,
-                                          color: CupertinoTheme.of(context)
-                                              .textTheme
-                                              .textStyle
-                                              .color!
-                                              .withValues(alpha: 0.75),
-                                          overflow: TextOverflow.ellipsis,
-                                        )))
-                          ]),
-                        ],
-                      )
-                  ],
-                )),
-              ],
-            ),
-          ]),
-        ))
-      ],
-    );
-  }
-
-  Widget createExamCard(context, List<Exam> exams) {
-    return Column(
-      children: [
-        SubSubtitleRow(subtitle: '考试'),
-        RoundRectangleCard(
-            child: Padding(
-          padding: const EdgeInsets.only(left: 8, right: 8),
-          child: Column(children: [
-            Row(
-              children: [
-                Expanded(
-                    child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Column(
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 12.0,
-                              height: 12.0,
-                              decoration: BoxDecoration(
-                                color: CupertinoColors.systemPink,
-                                shape: exams[0].type == ExamType.midterm
-                                    ? BoxShape.circle
-                                    : BoxShape.rectangle,
-                              ),
-                            ),
-                            const SizedBox(width: 8.0),
-                            Expanded(
-                                child: Text(exams[0].chineseTime,
-                                    style: CupertinoTheme.of(context)
-                                        .textTheme
-                                        .textStyle
-                                        .copyWith(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          overflow: TextOverflow.ellipsis,
-                                        ))),
-                          ],
-                        ),
-                        const SizedBox(height: 4.0),
-                        Row(children: [
-                          Icon(
-                            CupertinoIcons.location_solid,
-                            size: 14,
-                            color: CupertinoTheme.of(context)
-                                .textTheme
-                                .textStyle
-                                .color!
-                                .withValues(alpha: 0.5),
-                          ),
-                          Expanded(
-                              child: Text(' 地点：${exams[0].location ?? '未知'}',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.normal,
-                                    color: CupertinoTheme.of(context)
-                                        .textTheme
-                                        .textStyle
-                                        .color!
-                                        .withValues(alpha: 0.75),
-                                    overflow: TextOverflow.ellipsis,
-                                  )))
-                        ]),
-                        Row(children: [
-                          Icon(
-                            CupertinoIcons.map_pin_ellipse,
-                            size: 14,
-                            color: CupertinoTheme.of(context)
-                                .textTheme
-                                .textStyle
-                                .color!
-                                .withValues(alpha: 0.5),
-                          ),
-                          Expanded(
-                              child: Text(' 座位：${exams[0].seat ?? '未知'}',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.normal,
-                                    color: CupertinoTheme.of(context)
-                                        .textTheme
-                                        .textStyle
-                                        .color!
-                                        .withValues(alpha: 0.75),
-                                    overflow: TextOverflow.ellipsis,
-                                  )))
-                        ]),
-                        if (exams[0].type == ExamType.midterm)
-                          Row(children: [
-                            Icon(
-                              CupertinoIcons.doc_text,
-                              size: 14,
-                              color: CupertinoTheme.of(context)
-                                  .textTheme
-                                  .textStyle
-                                  .color!
-                                  .withValues(alpha: 0.5),
-                            ),
-                            Expanded(
-                                child: Text(' 类型：期中',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.normal,
-                                      color: CupertinoTheme.of(context)
-                                          .textTheme
-                                          .textStyle
-                                          .color!
-                                          .withValues(alpha: 0.75),
-                                      overflow: TextOverflow.ellipsis,
-                                    )))
-                          ]),
-                      ],
-                    ),
-                    for (var i = 1; i < exams.length; i++)
-                      Column(
-                        children: [
-                          Divider(
-                            height: 16,
-                            thickness: 1,
-                            indent: 0,
-                            endIndent: 0,
-                            color: CupertinoDynamicColor.resolve(
-                                CupertinoColors.systemFill, context),
-                          ),
-                          Row(
-                            children: [
-                              Container(
-                                width: 12.0,
-                                height: 12.0,
-                                decoration: BoxDecoration(
-                                  color: CupertinoColors.systemPink,
-                                  shape: exams[i].type == ExamType.midterm
-                                      ? BoxShape.circle
-                                      : BoxShape.rectangle,
-                                ),
-                              ),
-                              const SizedBox(width: 8.0),
-                              Expanded(
-                                  child: Text(exams[i].chineseTime,
-                                      style: CupertinoTheme.of(context)
-                                          .textTheme
-                                          .textStyle
-                                          .copyWith(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            overflow: TextOverflow.ellipsis,
-                                          ))),
-                            ],
-                          ),
-                          const SizedBox(height: 4.0),
-                          Row(children: [
-                            Icon(
-                              CupertinoIcons.location_solid,
-                              size: 14,
-                              color: CupertinoTheme.of(context)
-                                  .textTheme
-                                  .textStyle
-                                  .color!
-                                  .withValues(alpha: 0.5),
-                            ),
-                            Expanded(
-                                child: Text(' 地点：${exams[i].location ?? '未知'}',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.normal,
-                                      color: CupertinoTheme.of(context)
-                                          .textTheme
-                                          .textStyle
-                                          .color!
-                                          .withValues(alpha: 0.75),
-                                      overflow: TextOverflow.ellipsis,
-                                    )))
-                          ]),
-                          Row(children: [
-                            Icon(
-                              CupertinoIcons.map_pin_ellipse,
-                              size: 14,
-                              color: CupertinoTheme.of(context)
-                                  .textTheme
-                                  .textStyle
-                                  .color!
-                                  .withValues(alpha: 0.5),
-                            ),
-                            Expanded(
-                                child: Text(' 座位：${exams[i].seat ?? '未知'}',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.normal,
-                                      color: CupertinoTheme.of(context)
-                                          .textTheme
-                                          .textStyle
-                                          .color!
-                                          .withValues(alpha: 0.75),
-                                      overflow: TextOverflow.ellipsis,
-                                    )))
-                          ]),
-                          if (exams[i].type == ExamType.midterm)
-                            Row(children: [
-                              Icon(
-                                CupertinoIcons.doc_text,
-                                size: 14,
-                                color: CupertinoTheme.of(context)
-                                    .textTheme
-                                    .textStyle
-                                    .color!
-                                    .withValues(alpha: 0.5),
-                              ),
-                              Expanded(
-                                  child: Text(' 类型：期中',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.normal,
-                                        color: CupertinoTheme.of(context)
-                                            .textTheme
-                                            .textStyle
-                                            .color!
-                                            .withValues(alpha: 0.75),
-                                        overflow: TextOverflow.ellipsis,
-                                      )))
-                            ]),
-                        ],
-                      ),
-                  ],
-                )),
-              ],
-            ),
-          ]),
-        ))
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final sessions = [...course.sessions]..sort(
+        (a, b) => (a.time.firstOrNull ?? 0).compareTo(b.time.firstOrNull ?? 0));
+
     return CupertinoPageScaffold(
-      backgroundColor: CupertinoDynamicColor.resolve(
-          CupertinoColors.systemGroupedBackground, context),
+      backgroundColor:
+          CupertinoColors.systemGroupedBackground.resolveFrom(context),
       child: CustomScrollView(
         slivers: [
           const CelechronSliverTextHeader(subtitle: '课程详情'),
-          SliverToBoxAdapter(
-            child: Container(
-              padding: const EdgeInsets.only(bottom: 5, left: 16, right: 16),
-              child: Column(
-                children: [
-                  SubSubtitleRow(subtitle: '基本信息'),
-                  CourseBriefCard(course: course),
-                ],
-              ),
-            ),
+          SliverSafeArea(
+            top: false,
+            minimum: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+            sliver: SliverList.list(children: [
+              _CourseSection(
+                  title: '基本信息', child: CourseBriefCard(course: course)),
+              if (sessions.isNotEmpty)
+                _CourseSection(
+                  title: '课时',
+                  child: _CourseRows(
+                    rows: [
+                      for (final session in sessions)
+                        _CourseRow(
+                          title: session.chineseTime,
+                          color: TimeColors.colorFromClass(
+                              session.time.firstOrNull ?? 0),
+                          details: [
+                            CardDetailLine(CupertinoIcons.location,
+                                '地点 ${session.location ?? '未知'}'),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+              if (course.exams.isNotEmpty)
+                _CourseSection(
+                  title: '考试',
+                  child: _CourseRows(
+                    rows: [
+                      for (final exam in course.exams)
+                        _CourseRow(
+                          title: exam.chineseTime,
+                          color:
+                              CupertinoColors.systemPink.resolveFrom(context),
+                          marker: exam.type == ExamType.midterm
+                              ? CupertinoIcons.circle_fill
+                              : CupertinoIcons.square_fill,
+                          details: [
+                            CardDetailLine(CupertinoIcons.location,
+                                '地点 ${exam.location ?? '未知'}'),
+                            CardDetailLine(CupertinoIcons.person,
+                                '座位 ${exam.seat ?? '未知'}'),
+                            if (exam.type == ExamType.midterm)
+                              const CardDetailLine(
+                                  CupertinoIcons.doc_text, '类型 期中'),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+            ]),
           ),
-          if (course.sessions.isNotEmpty)
-            SliverToBoxAdapter(
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-                child: createSessionCard(context, course.sessions),
-              ),
-            ),
-          if (course.exams.isNotEmpty)
-            SliverToBoxAdapter(
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-                child: createExamCard(context, course.exams),
-              ),
-            ),
         ],
       ),
+    );
+  }
+}
+
+class _CourseSection extends StatelessWidget {
+  const _CourseSection({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 8,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              title,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+          ),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _CourseRows extends StatelessWidget {
+  const _CourseRows({required this.rows});
+
+  final List<_CourseRow> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    return RoundRectangleCard.content(
+      animate: false,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final (index, row) in rows.indexed) ...[
+            if (index != 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: SizedBox(
+                  height: 1,
+                  child: ColoredBox(
+                      color: CupertinoColors.separator.resolveFrom(context)),
+                ),
+              ),
+            row,
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _CourseRow extends StatelessWidget {
+  const _CourseRow({
+    required this.title,
+    required this.color,
+    required this.details,
+    this.marker = CupertinoIcons.circle_fill,
+  });
+
+  final String title;
+  final Color color;
+  final IconData marker;
+  final List<CardDetailLine> details;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 5,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 8,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 5),
+              child: Icon(marker, size: 10, color: color),
+            ),
+            Expanded(
+              child: Text(
+                title,
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+        ...details,
+      ],
     );
   }
 }

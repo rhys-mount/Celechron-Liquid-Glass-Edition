@@ -10,6 +10,7 @@ class TwoLineCard extends StatefulWidget {
   final VoidCallback? onLongPress;
   final CupertinoDynamicColor backgroundColor;
   final bool transparent;
+  final bool mutedTint;
   final double? height;
   final double? width;
 
@@ -24,6 +25,7 @@ class TwoLineCard extends StatefulWidget {
     this.onLongPress,
     this.backgroundColor = CupertinoColors.systemBackground,
     this.transparent = false,
+    this.mutedTint = false,
     this.height,
     this.width,
   });
@@ -121,23 +123,33 @@ class _TwoLineCardState extends State<TwoLineCard>
       );
     }
 
+    final tint = CupertinoDynamicColor.resolve(widget.backgroundColor, context);
+    final background = widget.mutedTint
+        ? Color.alphaBlend(
+            tint.withValues(alpha: brightness == Brightness.dark ? 0.12 : 0.48),
+            CupertinoColors.secondarySystemGroupedBackground
+                .resolveFrom(context),
+          )
+        : brightness == Brightness.dark
+            ? CupertinoColors.secondarySystemFill
+            : tint;
     var core = Container(
       height: widget.height,
       width: widget.width,
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(widget.mutedTint ? 11 : 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        color: brightness == Brightness.dark
-            ? CupertinoColors.secondarySystemFill
-            : CupertinoDynamicColor.resolve(widget.backgroundColor, context),
+        color: background,
         // boxShadow
-        boxShadow: const [
-          BoxShadow(
-            color: Color.fromRGBO(0, 0, 0, 0.05),
-            offset: Offset(0, 2),
-            blurRadius: 4,
-          ),
-        ],
+        boxShadow: widget.mutedTint
+            ? const []
+            : const [
+                BoxShadow(
+                  color: Color.fromRGBO(0, 0, 0, 0.05),
+                  offset: Offset(0, 2),
+                  blurRadius: 4,
+                ),
+              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -149,11 +161,13 @@ class _TwoLineCardState extends State<TwoLineCard>
             child: Text(
               widget.title,
               style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
-                    color: CupertinoTheme.of(context)
-                        .textTheme
-                        .textStyle
-                        .color!
-                        .withValues(alpha: 0.5),
+                    color: widget.mutedTint
+                        ? CupertinoColors.secondaryLabel.resolveFrom(context)
+                        : CupertinoTheme.of(context)
+                            .textTheme
+                            .textStyle
+                            .color!
+                            .withValues(alpha: 0.5),
                     fontSize: 14,
                     fontWeight: FontWeight.normal,
                   ),
@@ -185,6 +199,7 @@ class _TwoLineCardState extends State<TwoLineCard>
                       CupertinoTheme.of(context).textTheme.textStyle.copyWith(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
+                            fontFeatures: const [FontFeature.tabularFigures()],
                             color: (widget.withColoredFont &&
                                     brightness == Brightness.dark)
                                 ? CupertinoDynamicColor.resolve(
