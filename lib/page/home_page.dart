@@ -10,6 +10,7 @@ import 'package:celechron/page/task/task_view.dart';
 import 'package:celechron/page/calendar/calendar_view.dart';
 import 'package:celechron/page/option/option_view.dart';
 import 'package:celechron/design/liquid_glass/glass_appearance.dart';
+import 'package:celechron/design/liquid_glass/home_scroll_insets.dart';
 import 'package:celechron/design/liquid_glass/home_tab_bar.dart';
 
 import 'package:celechron/worker/fuse.dart';
@@ -101,15 +102,21 @@ class _HomePageState extends State<HomePage> {
       ),
     );
 
-    // 键盘高度转为内容 Padding。标签栏浮在内容之上，底部留白由各页 SafeArea 消费。
+    // 玻璃栏覆盖滚动视口，列表只在滚动末尾为栏和系统手势区留空。
     var newMediaQuery = media.removeViewInsets(removeBottom: true);
+    var scrollEnd = 0.0;
     var leadingSpace = 0.0;
     const railMargin = 12.0;
     if (tabBar != null) {
       final bottomPadding = tabBar.preferredSize.height + media.padding.bottom;
-      newMediaQuery = newMediaQuery.copyWith(
-        padding: newMediaQuery.padding.copyWith(bottom: bottomPadding),
-      );
+      if (useGlass) {
+        scrollEnd = bottomPadding;
+        newMediaQuery = newMediaQuery.removePadding(removeBottom: true);
+      } else {
+        newMediaQuery = newMediaQuery.copyWith(
+          padding: newMediaQuery.padding.copyWith(bottom: bottomPadding),
+        );
+      }
     } else if (railWidth != null) {
       final rtl = Directionality.of(context) == TextDirection.rtl;
       final safeInset = rtl ? media.padding.right : media.padding.left;
@@ -139,7 +146,7 @@ class _HomePageState extends State<HomePage> {
                   constraints: BoxConstraints(
                     maxWidth: railWidth == null ? double.infinity : 1040,
                   ),
-                  child: content,
+                  child: HomeScrollInsets(bottom: scrollEnd, child: content),
                 ),
               ),
             ),

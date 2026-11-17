@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:celechron/design/custom_decoration.dart';
+import 'package:celechron/design/liquid_glass/home_scroll_insets.dart';
 import 'package:celechron/design/liquid_glass/navigation_action.dart';
 import 'package:celechron/design/sub_title.dart';
 import 'package:celechron/model/task.dart';
@@ -90,21 +93,44 @@ class CalendarPage extends StatelessWidget {
               ),
             ),
             Expanded(
-              child: Obx(
-                () {
+              child: LayoutBuilder(
+                builder: (context, constraints) => Obx(() {
                   if (_calendarController.viewMode.value ==
                       CalendarViewMode.schedule) {
                     return ScheduleView(controller: _calendarController);
                   }
+                  final useColumns =
+                      defaultTargetPlatform == TargetPlatform.android &&
+                          MediaQuery.orientationOf(context) ==
+                              Orientation.landscape &&
+                          constraints.maxWidth >= 760 &&
+                          constraints.maxHeight >= 420;
+                  final format = _calendarController.calendarFormat.value;
+                  final rows = format == CalendarFormat.week ? 1 : 6;
+                  const weekdayHeight = 20.0;
+                  const calendarBottom = 5.0;
+                  const listGap = 8.0;
+                  final listSpace =
+                      math.min(184.0, constraints.maxHeight * .42);
+                  final rowHeight = useColumns
+                      ? 48.0
+                      : ((constraints.maxHeight -
+                                  listSpace -
+                                  weekdayHeight -
+                                  calendarBottom -
+                                  listGap) /
+                              rows)
+                          .clamp(0.0, 48.0)
+                          .toDouble();
                   final calendar = Padding(
-                    padding:
-                        const EdgeInsets.only(bottom: 5, left: 12, right: 12),
+                    padding: const EdgeInsets.only(
+                        bottom: calendarBottom, left: 12, right: 12),
                     child: TableCalendar(
                       locale: 'zh_CN',
                       firstDay: DateTime.utc(2022, 9, 1),
                       lastDay: DateTime.utc(2030, 12, 31),
-                      rowHeight: 48.0,
-                      daysOfWeekHeight: 20.0,
+                      rowHeight: rowHeight,
+                      daysOfWeekHeight: weekdayHeight,
                       startingDayOfWeek: StartingDayOfWeek.monday,
                       daysOfWeekStyle: DaysOfWeekStyle(
                         dowTextFormatter: (date, locale) => <String>[
@@ -129,7 +155,7 @@ class CalendarPage extends StatelessWidget {
                         return isSameDay(
                             _calendarController.selectedDay.value, day);
                       },
-                      calendarFormat: _calendarController.calendarFormat.value,
+                      calendarFormat: format,
                       onPageChanged: (focusedDay) {
                         _calendarController.focusedDay.value = focusedDay;
                       },
@@ -221,45 +247,38 @@ class CalendarPage extends StatelessWidget {
                         ),
                       );
                     }),
+                    SliverToBoxAdapter(
+                      child:
+                          SizedBox(height: HomeScrollInsets.bottomOf(context)),
+                    ),
                   ];
-                  return LayoutBuilder(
-                    builder: (context, constraints) {
-                      final useColumns =
-                          defaultTargetPlatform == TargetPlatform.android &&
-                              MediaQuery.orientationOf(context) ==
-                                  Orientation.landscape &&
-                              constraints.maxWidth >= 760 &&
-                              constraints.maxHeight >= 420;
-                      if (useColumns) {
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          spacing: 16,
-                          children: [
-                            Expanded(
-                              child: SingleChildScrollView(
-                                primary: false,
-                                child: calendar,
-                              ),
-                            ),
-                            Expanded(
-                              child: CustomScrollView(
-                                primary: false,
-                                slivers: daySlivers,
-                              ),
-                            ),
-                          ],
-                        );
-                      }
-                      return CustomScrollView(
-                        slivers: [
-                          SliverToBoxAdapter(child: calendar),
-                          const SliverToBoxAdapter(child: SizedBox(height: 16)),
-                          ...daySlivers,
-                        ],
-                      );
-                    },
+                  final dayList = CustomScrollView(
+                    primary: false,
+                    slivers: daySlivers,
                   );
-                },
+                  if (useColumns) {
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      spacing: 16,
+                      children: [
+                        Expanded(
+                          child: SingleChildScrollView(
+                            primary: false,
+                            child: calendar,
+                          ),
+                        ),
+                        Expanded(child: dayList),
+                      ],
+                    );
+                  }
+                  return Column(
+                    children: [
+                      calendar,
+                      const SizedBox(height: listGap),
+                      Expanded(child: dayList),
+                    ],
+                  );
+                }),
               ),
             ),
           ],

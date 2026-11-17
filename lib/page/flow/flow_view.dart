@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:celechron/design/custom_colors.dart';
 import 'package:celechron/design/custom_decoration.dart';
 import 'package:celechron/design/liquid_glass/navigation_action.dart';
+import 'package:celechron/design/liquid_glass/home_scroll_insets.dart';
 import 'package:celechron/utils/time_helper.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' show Divider;
@@ -650,9 +651,9 @@ class FlowPage extends StatelessWidget {
                 );
               },
             ),
-            const SliverToBoxAdapter(
+            SliverToBoxAdapter(
               child: SizedBox(
-                height: 20,
+                height: 20 + HomeScrollInsets.bottomOf(context),
               ),
             ),
           ],

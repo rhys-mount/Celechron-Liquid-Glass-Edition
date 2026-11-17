@@ -6,6 +6,7 @@ import 'package:extended_sliver/extended_sliver.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:celechron/design/liquid_glass/glass_appearance.dart';
+import 'package:celechron/design/liquid_glass/home_scroll_insets.dart';
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -1004,7 +1005,7 @@ class ScholarPage extends StatelessWidget {
                     top: 8,
                     right: 16,
                     left: 16,
-                    bottom: MediaQuery.of(context).padding.bottom + 4),
+                    bottom: MediaQuery.paddingOf(context).bottom + 4),
                 child: Column(
                   children: _scholarController.scholar.isGrs
                       ? [
@@ -1091,6 +1092,9 @@ class ScholarPage extends StatelessWidget {
                       ]));
             }
           }),
+        ),
+        SliverToBoxAdapter(
+          child: SizedBox(height: HomeScrollInsets.bottomOf(context)),
         ),
       ],
     ));

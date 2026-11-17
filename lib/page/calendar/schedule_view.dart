@@ -6,6 +6,7 @@ import 'package:celechron/design/round_rectangle_card.dart';
 import 'package:celechron/page/scholar/course_schedule/course_card.dart';
 import 'package:celechron/page/calendar/calendar_controller.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:celechron/design/liquid_glass/home_scroll_insets.dart';
 import 'package:get/get.dart';
 
 class ScheduleView extends StatelessWidget {
@@ -313,7 +314,12 @@ class ScheduleView extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          16,
+          16,
+          16 + HomeScrollInsets.bottomOf(context),
+        ),
         child: _courseSchedule(context),
       ),
     );

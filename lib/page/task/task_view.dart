@@ -1,5 +1,6 @@
 import 'package:celechron/design/custom_decoration.dart';
 import 'package:celechron/design/liquid_glass/navigation_action.dart';
+import 'package:celechron/design/liquid_glass/home_scroll_insets.dart';
 import 'package:celechron/page/flow/flow_controller.dart';
 import 'package:celechron/page/task/task_controller.dart';
 import 'package:celechron/utils/utils.dart';
@@ -722,8 +723,8 @@ class TaskPage extends StatelessWidget {
               ),
             ),
             SliverToBoxAdapter(
-              child: Container(
-                height: 100,
+              child: SizedBox(
+                height: 20 + HomeScrollInsets.bottomOf(context),
               ),
             ),
           ],

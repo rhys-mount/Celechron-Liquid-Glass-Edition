@@ -2,9 +2,11 @@
 // 1) 任务页空状态必须随任务列表出现/消失，不能滞留在列表上方
 // 2) 从任务卡片进入编辑页点“删除任务”应真正删除（与左滑删除共用同一实现）
 import 'package:celechron/database/database_helper.dart';
+import 'package:celechron/design/liquid_glass/home_scroll_insets.dart';
 import 'package:celechron/model/period.dart';
 import 'package:celechron/model/scholar.dart';
 import 'package:celechron/model/task.dart';
+import 'package:celechron/page/calendar/calendar_view.dart';
 import 'package:celechron/page/flow/flow_controller.dart';
 import 'package:celechron/page/flow/flow_view.dart';
 import 'package:celechron/page/task/task_controller.dart';
@@ -13,6 +15,8 @@ import 'package:celechron/page/task/task_view.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 class _FakeDb extends DatabaseHelper {
   List<Task> stored = <Task>[];
@@ -189,6 +193,71 @@ void main() {
 
       expect(find.text('删除功能'), findsOneWidget, reason: '新任务卡片应当出现');
       expect(find.text('没有任务'), findsNothing, reason: '有任务时不应再显示空状态');
+    });
+  });
+
+  testWidgets('任务列表绘制到底部，最后一项可滚到悬浮栏上方', (tester) async {
+    await runPageTest(tester, () async {
+      taskList.addAll([
+        for (var i = 0; i < 20; i++) _testTask(summary: '滚动测试任务 $i'),
+      ]);
+      await tester.pumpWidget(CupertinoApp(
+        home: HomeScrollInsets(bottom: 88, child: TaskPage()),
+      ));
+      await tester.pump();
+
+      final scrollView = find.byType(CustomScrollView);
+      final viewportBottom = tester.getBottomRight(scrollView).dy;
+      expect(viewportBottom,
+          tester.view.physicalSize.height / tester.view.devicePixelRatio);
+      final position =
+          tester.state<ScrollableState>(find.byType(Scrollable).first).position;
+      position.jumpTo(position.maxScrollExtent);
+      await tester.pump();
+
+      final last = find.text('滚动测试任务 19');
+      expect(last.hitTestable(), findsOneWidget);
+      expect(tester.getBottomRight(last).dy, lessThan(viewportBottom - 88));
+    });
+  });
+
+  testWidgets('滑动当天日程时月历位置保持固定', (tester) async {
+    await tester.runAsync(() => initializeDateFormatting('zh_CN'));
+    final now = DateTime.now();
+    taskList.addAll([
+      for (var i = 0; i < 16; i++)
+        Task(
+          type: TaskType.fixed,
+          status: TaskStatus.running,
+          startTime: DateTime(now.year, now.month, now.day, i),
+          endTime: DateTime(now.year, now.month, now.day, i + 1),
+          repeatEndsTime: now,
+          summary: '当天日程测试 $i',
+        ),
+    ]);
+    await runPageTest(tester, () async {
+      await tester.pumpWidget(CupertinoApp(
+        home: HomeScrollInsets(bottom: 88, child: CalendarPage()),
+      ));
+      await tester.pump();
+
+      final calendar =
+          find.byWidgetPredicate((widget) => widget is TableCalendar);
+      final originalTop = tester.getTopLeft(calendar);
+      final dayList = find.byType(CustomScrollView);
+      expect(tester.getBottomRight(dayList).dy,
+          tester.view.physicalSize.height / tester.view.devicePixelRatio);
+      final listScrollable = find.descendant(
+        of: dayList,
+        matching: find.byType(Scrollable),
+      );
+      final position = tester.state<ScrollableState>(listScrollable).position;
+
+      await tester.drag(dayList, const Offset(0, -180));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(position.pixels, greaterThan(0));
+      expect(tester.getTopLeft(calendar), originalTop);
+      expect(tester.takeException(), isNull);
     });
   });
 

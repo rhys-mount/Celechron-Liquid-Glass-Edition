@@ -1,3 +1,4 @@
+import 'package:celechron/design/liquid_glass/home_scroll_insets.dart';
 import 'package:celechron/utils/platform_features.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -565,7 +566,10 @@ class OptionPage extends StatelessWidget {
                       },
                     ),
                   ]),
-            )
+            ),
+            SliverToBoxAdapter(
+              child: SizedBox(height: HomeScrollInsets.bottomOf(context)),
+            ),
           ],
         )));
   }
