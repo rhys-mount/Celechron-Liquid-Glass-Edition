@@ -73,3 +73,7 @@ Android 恢复完整遮罩，选中胶囊使用 Minimal，底栏背景保留能�
 学业首页及共享的二级页头使用 Cupertino 的滚动导航栏。返回与操作位于固定栏，大标题随内容自然收起。日程保留紧凑的月份和操作区，以便月历与当天事项共用手机屏幕。两个相关图标共用一片玻璃，各有独立点击区和读屏标签。「今天」「重置」「全部学期」保留文字。课程和考试的固定选择区使用随主题变化的背景，以保持文字可读。搜索页通过「取消」退出，保留自动聚焦与搜索回调。 [Apple 工具栏设计指南](https://developer.apple.com/design/human-interface-guidelines/toolbars) [Apple 标签栏设计指南](https://developer.apple.com/design/human-interface-guidelines/tab-bars)
 
 Android 的分组工具栏用固定的 44 dp 触控区及 Minimal 玻璃保留分组外观。常规画质的试验构建在模拟器进入任务时复现输入超时，关闭玻璃时任务页可用。固定尺寸和轻量玻璃的组合通过了普通包的切页与工具栏点击复测，仍需在物理设备测量帧时间。
+
+## 2026-11-17 · 用 Profile 验收带数据的安卓界面
+
+API 36 模拟器下，Debug 包切换到含 20 条任务和 18 条日程的任务页时输入超时，开关玻璃均有复现。相同代码和数据在 Profile 下通过两种外观及连续切页复验。此轮向用户提供开发签名的 Profile APK。正式发布继续采用既定 Release 签名流程。
