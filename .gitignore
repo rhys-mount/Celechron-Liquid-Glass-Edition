@@ -410,6 +410,10 @@ build/
 # If you're building an application, you may want to check-in your pubspec.lock
 !/pubspec.lock
 /.local/
+*.jks
+*.keystore
+*.p12
+*.pfx
 
 # Directory created by dartdoc
 # If you don't generate documentation locally you can remove this line.

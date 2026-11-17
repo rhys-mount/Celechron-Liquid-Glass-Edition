@@ -1,0 +1,71 @@
+name: Package Liquid Glass Edition for Android
+
+on:
+  push:
+    tags: ['edition-android-v*']
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    if: github.repository == 'rhys-mount/Celechron'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify tag source
+        run: git merge-base --is-ancestor HEAD origin/liquid-glass
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.4'
+          channel: stable
+          cache: true
+      - run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0' 'ndk;28.2.13676358'
+      - run: flutter pub get --enforce-lockfile
+      - run: flutter analyze --no-pub --no-fatal-infos
+      - run: flutter test --no-pub
+      - name: Sign and verify APKs
+        shell: bash
+        env:
+          CELECHRON_RELEASE_SIGNING_REQUIRED: 'true'
+          CELECHRON_RELEASE_STORE_PASSWORD: ${{ secrets.EDITION_ANDROID_STORE_PASSWORD }}
+          CELECHRON_RELEASE_KEY_ALIAS: ${{ secrets.EDITION_ANDROID_KEY_ALIAS }}
+          CELECHRON_RELEASE_KEY_PASSWORD: ${{ secrets.EDITION_ANDROID_KEY_PASSWORD }}
+          KEYSTORE_BASE64: ${{ secrets.EDITION_ANDROID_KEYSTORE_BASE64 }}
+          EXPECTED_CERTIFICATE_SHA256: ${{ vars.EDITION_ANDROID_SIGNING_SHA256 }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$KEYSTORE_BASE64" || ! "$EXPECTED_CERTIFICATE_SHA256" =~ ^[[:xdigit:]]{64}$ ]]; then
+            echo "::error::Set the Edition signing secrets and the 64-digit certificate SHA-256 variable."
+            exit 1
+          fi
+
+          umask 077
+          export CELECHRON_RELEASE_STORE_FILE
+          CELECHRON_RELEASE_STORE_FILE="$(mktemp "$RUNNER_TEMP/edition-android-keystore.XXXXXX")"
+          trap 'rm -f -- "$CELECHRON_RELEASE_STORE_FILE"' EXIT
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$CELECHRON_RELEASE_STORE_FILE"
+          unset KEYSTORE_BASE64
+
+          flutter build apk --release --no-pub --split-per-abi
+
+          apksigner="$ANDROID_HOME/build-tools/36.0.0/apksigner"
+          for abi in arm64-v8a armeabi-v7a x86_64; do
+            apk="build/app/outputs/flutter-apk/app-$abi-release.apk"
+            certificate="$("$apksigner" verify --print-certs "$apk" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p')"
+            if [[ "$certificate" != "${EXPECTED_CERTIFICATE_SHA256,,}" ]]; then
+              echo "::error::$apk has an unexpected Edition signing certificate."
+              exit 1
+            fi
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: celechron-${{ github.ref_name }}
+          path: build/app/outputs/flutter-apk/app-*-release.apk
+          if-no-files-found: error

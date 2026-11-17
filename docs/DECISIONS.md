@@ -47,3 +47,13 @@ Android 恢复完整遮罩，选中胶囊使用 Minimal，底栏背景保留能�
 开启 Liquid Glass 时，横屏窗口宽度至少 840 dp 且高度至少 480 dp 使用紧凑侧栏，宽度达到 1200 dp 时显示文字。侧栏使用一个玻璃容器，沿用同一 `PageView`、标签定义和回调。紧凑侧栏在同一个无障碍节点上提供标签、点击动作和选中状态。 [Android 窗口尺寸等级](https://developer.android.com/develop/ui/compose/layouts/adaptive/use-window-size-classes)
 
 日程双栏依据侧栏和安全区扣除后的实际内容空间，Android 横屏下宽度至少 760 dp、高度至少 420 dp 时并排显示月历与当天事项。两种布局复用同一日历、选日状态、事项列表和原有编辑路由。
+
+## 2026-11-16 · Edition Android 打包与证书核验
+
+目标 Fork 的 `edition-android-v*` 标签触发打包。工作流先检查标签提交来自 `liquid-glass`，再使用固定工具链、锁文件及 Edition 签名构建三个 ABI。每个 APK 通过 `apksigner` 并匹配预登记的证书 SHA-256 后，工作流才保存产物。标签触发让打包配置随 Edition 分支维护。 [GitHub Actions 触发事件](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows) [Android apksigner](https://developer.android.com/tools/apksigner)
+
+签名通过目标 Fork 的 Actions secrets 配置 `EDITION_ANDROID_KEYSTORE_BASE64`、`EDITION_ANDROID_STORE_PASSWORD`、`EDITION_ANDROID_KEY_ALIAS` 和 `EDITION_ANDROID_KEY_PASSWORD`。在 Actions variables 配置 `EDITION_ANDROID_SIGNING_SHA256` 为 64 个十六进制字符的证书指纹。工作流只在打包步骤中读取密钥和密码，临时文件随打包步骤结束清理。 [GitHub Actions secrets](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets)
+
+本机默认构建继续使用开发签名。设置 `CELECHRON_RELEASE_SIGNING_REQUIRED` 会要求提供完整的 Edition 签名参数，缺失时 Gradle 直接退出。项目忽略常见密钥库文件，正式签名材料应在工作区之外保存。
+
+本次分 ABI 构建的版本代码分别为 arm64-v8a 的 2001、armeabi-v7a 的 1001、x86_64 的 4001。正式迭代继续沿用同一分包策略，升级验证比较同一 ABI 的 APK 版本代码和证书。
