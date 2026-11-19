@@ -1,6 +1,8 @@
-import 'package:extended_sliver/extended_sliver.dart';
+import 'package:celechron/design/floating_filter_panel.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:celechron/design/card_detail_line.dart';
+import 'package:celechron/design/content_empty_state.dart';
 
 import 'package:get/get.dart';
 
@@ -39,271 +41,120 @@ class _ExamListPageState extends State<ExamListPage> {
     super.dispose();
   }
 
-  Widget _examCard(context, List<Exam> exams) {
+  Widget _examCard(BuildContext context, List<Exam> exams) {
+    final first = exams.first;
+    final clock = DateFormat('HH:mm');
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SubSubtitleRow(subtitle: exams[0].chineseDate),
+        SubSubtitleRow(
+            subtitle: first.time.isEmpty ? '日期待定' : first.chineseDate),
         RoundRectangleCard(
-          child: Padding(
-              padding: const EdgeInsets.only(left: 8, right: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Column(
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 12.0,
-                            height: 12.0,
-                            decoration: BoxDecoration(
-                              color: CupertinoColors.systemPink,
-                              shape: exams[0].type == ExamType.midterm
-                                  ? BoxShape.circle
-                                  : BoxShape.rectangle,
-                            ),
-                          ),
-                          const SizedBox(width: 8.0),
-                          Expanded(
-                              child: Text(
-                                  '${exams[0].name}${exams[0].type == ExamType.midterm ? "（期中）" : ""}',
-                                  style: CupertinoTheme.of(context)
-                                      .textTheme
-                                      .textStyle
-                                      .copyWith(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        overflow: TextOverflow.ellipsis,
-                                      ))),
-                        ],
-                      ),
-                      const SizedBox(height: 4.0),
-                      Row(children: [
-                        Icon(
-                          CupertinoIcons.time_solid,
-                          size: 14,
-                          color: CupertinoTheme.of(context)
-                              .textTheme
-                              .textStyle
-                              .color!
-                              .withValues(alpha: 0.5),
-                        ),
-                        Expanded(
-                            child: Text(' 时间：${exams[0].chineseTime}',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.normal,
-                                  color: CupertinoTheme.of(context)
-                                      .textTheme
-                                      .textStyle
-                                      .color!
-                                      .withValues(alpha: 0.75),
-                                  overflow: TextOverflow.ellipsis,
-                                )))
-                      ]),
-                      Row(children: [
-                        Icon(
-                          CupertinoIcons.location_solid,
-                          size: 14,
-                          color: CupertinoTheme.of(context)
-                              .textTheme
-                              .textStyle
-                              .color!
-                              .withValues(alpha: 0.5),
-                        ),
-                        Expanded(
-                            child: Text(' 地点：${exams[0].location ?? '未知'}',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.normal,
-                                  color: CupertinoTheme.of(context)
-                                      .textTheme
-                                      .textStyle
-                                      .color!
-                                      .withValues(alpha: 0.75),
-                                  overflow: TextOverflow.ellipsis,
-                                )))
-                      ]),
-                      Row(children: [
-                        Icon(
-                          CupertinoIcons.map_pin_ellipse,
-                          size: 14,
-                          color: CupertinoTheme.of(context)
-                              .textTheme
-                              .textStyle
-                              .color!
-                              .withValues(alpha: 0.5),
-                        ),
-                        Expanded(
-                            child: Text(' 座位：${exams[0].seat ?? '未知'}',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.normal,
-                                  color: CupertinoTheme.of(context)
-                                      .textTheme
-                                      .textStyle
-                                      .color!
-                                      .withValues(alpha: 0.75),
-                                  overflow: TextOverflow.ellipsis,
-                                )))
-                      ]),
-                    ],
-                  ),
-                  for (var i = 1; i < exams.length; i++)
-                    Column(
-                      children: [
-                        Divider(
-                          height: 16,
-                          thickness: 1,
-                          indent: 0,
-                          endIndent: 0,
-                          color: CupertinoDynamicColor.resolve(
-                              CupertinoColors.systemFill, context),
-                        ),
-                        Row(
-                          children: [
-                            Container(
-                              width: 12.0,
-                              height: 12.0,
-                              decoration: BoxDecoration(
-                                color: CupertinoColors.systemPink,
-                                shape: exams[i].type == ExamType.midterm
-                                    ? BoxShape.circle
-                                    : BoxShape.rectangle,
-                              ),
-                            ),
-                            const SizedBox(width: 8.0),
-                            Expanded(
-                                child: Text(
-                                    '${exams[i].name}${exams[i].type == ExamType.midterm ? "（期中）" : ""}',
-                                    style: CupertinoTheme.of(context)
-                                        .textTheme
-                                        .textStyle
-                                        .copyWith(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          overflow: TextOverflow.ellipsis,
-                                        ))),
-                          ],
-                        ),
-                        const SizedBox(height: 4.0),
-                        Row(children: [
-                          Icon(
-                            CupertinoIcons.time_solid,
-                            size: 14,
-                            color: CupertinoTheme.of(context)
-                                .textTheme
-                                .textStyle
-                                .color!
-                                .withValues(alpha: 0.5),
-                          ),
-                          Expanded(
-                              child: Text(' 时间：${exams[i].chineseTime}',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.normal,
-                                    color: CupertinoTheme.of(context)
-                                        .textTheme
-                                        .textStyle
-                                        .color!
-                                        .withValues(alpha: 0.75),
-                                    overflow: TextOverflow.ellipsis,
-                                  )))
-                        ]),
-                        Row(children: [
-                          Icon(
-                            CupertinoIcons.location_solid,
-                            size: 14,
-                            color: CupertinoTheme.of(context)
-                                .textTheme
-                                .textStyle
-                                .color!
-                                .withValues(alpha: 0.5),
-                          ),
-                          Expanded(
-                              child: Text(' 地点：${exams[i].location ?? '未知'}',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.normal,
-                                    color: CupertinoTheme.of(context)
-                                        .textTheme
-                                        .textStyle
-                                        .color!
-                                        .withValues(alpha: 0.75),
-                                    overflow: TextOverflow.ellipsis,
-                                  )))
-                        ]),
-                        Row(children: [
-                          Icon(
-                            CupertinoIcons.map_pin_ellipse,
-                            size: 14,
-                            color: CupertinoTheme.of(context)
-                                .textTheme
-                                .textStyle
-                                .color!
-                                .withValues(alpha: 0.5),
-                          ),
-                          Expanded(
-                              child: Text(' 座位：${exams[i].seat ?? '未知'}',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.normal,
-                                    color: CupertinoTheme.of(context)
-                                        .textTheme
-                                        .textStyle
-                                        .color!
-                                        .withValues(alpha: 0.75),
-                                    overflow: TextOverflow.ellipsis,
-                                  )))
-                        ]),
-                      ],
+          animate: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final (index, exam) in exams.indexed) ...[
+                if (index > 0)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: ColoredBox(
+                      color: CupertinoColors.separator.resolveFrom(context),
+                      child: const SizedBox(width: double.infinity, height: 1),
                     ),
-                ],
-              )),
-        )
+                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: 8,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Icon(
+                        exam.type == ExamType.midterm
+                            ? CupertinoIcons.circle_fill
+                            : CupertinoIcons.square_fill,
+                        color: CupertinoColors.systemPink.resolveFrom(context),
+                        size: 12,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        exam.type == ExamType.midterm
+                            ? '${exam.name}（期中）'
+                            : exam.name,
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                CardDetailLine(
+                  CupertinoIcons.clock,
+                  exam.time.length < 2
+                      ? '时间待定'
+                      : '${clock.format(exam.time.first)} – ${clock.format(exam.time.last)}',
+                ),
+                CardDetailLine(
+                    CupertinoIcons.location, '地点 ${exam.location ?? '未知'}'),
+                CardDetailLine(
+                    CupertinoIcons.person, '座位 ${exam.seat ?? '未知'}'),
+              ],
+            ],
+          ),
+        ),
       ],
     );
   }
 
   Widget _semesterPicker(BuildContext context) {
-    return RoundRectangleCardWithForehead(
-        forehead: const Row(children: [
-          // alert icon
-          Padding(
-            padding: EdgeInsets.only(left: 12, top: 4, bottom: 4),
-            child: Icon(
-              CupertinoIcons.exclamationmark_circle_fill,
-              color: CupertinoColors.white,
-              size: 14,
-            ),
-          ),
-          Flexible(
-            child: Padding(
-              padding: EdgeInsets.only(left: 4, top: 4, bottom: 4),
-              child: Text('请务必前往教务网核对',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    overflow: TextOverflow.ellipsis,
-                    color: CupertinoColors.white,
-                  )),
-            ),
-          ),
-        ]),
-        foreheadColor: CupertinoColors.systemRed,
-        child: Obx(
-          () => SemesterChips(
-            names: [
-              for (final semester in _examListController.semesters)
-                semester.name
+    final dark = CupertinoTheme.brightnessOf(context) == Brightness.dark;
+    final warningBackground =
+        dark ? const Color(0xFF471F23) : const Color(0xFFFFE8E7);
+    final warningForeground =
+        dark ? const Color(0xFFFFB4B0) : const Color(0xFF9B241F);
+    return SliverFloatingFilterPanel(
+      childOpacity: 0.97,
+      banner: DecoratedBox(
+        decoration: BoxDecoration(
+          color: warningBackground,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: Row(
+            spacing: 4,
+            children: [
+              Icon(
+                CupertinoIcons.exclamationmark_circle_fill,
+                color: warningForeground,
+                size: 14,
+              ),
+              Flexible(
+                child: Text('请务必前往教务网核对',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: warningForeground,
+                    )),
+              ),
             ],
-            selectedIndex: _examListController.semesterIndex.value,
-            onSelected: (index) {
-              _examListController.semesterIndex.value = index;
-              _examListController.semesterIndex.refresh();
-            },
           ),
-        ));
+        ),
+      ),
+      child: Obx(
+        () => SemesterChips(
+          names: [
+            for (final semester in _examListController.semesters) semester.name
+          ],
+          selectedIndex: _examListController.selectedIndex,
+          onSelected: (index) {
+            _examListController.semesterIndex.value = index;
+            _examListController.semesterIndex.refresh();
+          },
+        ),
+      ),
+    );
   }
 
   @override
@@ -316,29 +167,29 @@ class _ExamListPageState extends State<ExamListPage> {
           const CelechronSliverTextHeader(
             subtitle: '考试',
           ),
-          SliverPinnedToBoxAdapter(
-            child: ColoredBox(
-              color: CupertinoDynamicColor.resolve(
-                  CupertinoColors.systemGroupedBackground, context),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
-                child: _semesterPicker(context),
-              ),
-            ),
-          ),
-          Obx(() => SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => Container(
-                    padding: index == 0
-                        ? const EdgeInsets.only(
-                            top: 0, bottom: 5, left: 16, right: 16)
-                        : const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 5),
-                    child: _examCard(context, _examListController.exams[index]),
-                  ),
-                  childCount: _examListController.exams.length,
+          _semesterPicker(context),
+          Obx(() {
+            final exams = _examListController.exams;
+            if (exams.isEmpty) {
+              return const SliverToBoxAdapter(
+                child: ContentEmptyState(
+                  icon: CupertinoIcons.calendar,
+                  title: '本学期暂无考试',
                 ),
-              ))
+              );
+            }
+            return SliverPadding(
+              padding: EdgeInsets.fromLTRB(
+                  16, 0, 16, MediaQuery.paddingOf(context).bottom + 12),
+              sliver: SliverList.builder(
+                itemCount: exams.length,
+                itemBuilder: (context, index) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _examCard(context, exams[index]),
+                ),
+              ),
+            );
+          }),
         ],
       ),
     );

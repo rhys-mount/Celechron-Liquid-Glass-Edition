@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ecard_widget_accent">@color/ecard_widget_accent_dark</color>
+    <color name="ecard_widget_background">@color/ecard_widget_surface_dark</color>
+    <color name="ecard_widget_foreground">@color/ecard_widget_surface_light</color>
+</resources>

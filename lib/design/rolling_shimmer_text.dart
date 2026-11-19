@@ -25,8 +25,17 @@ class _RollingShimmerTextState extends State<RollingShimmerText>
   @override
   void initState() {
     super.initState();
-    _shimmer = AnimationController(vsync: this, duration: widget.shimmerPeriod)
-      ..repeat();
+    _shimmer = AnimationController(vsync: this, duration: widget.shimmerPeriod);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _shimmer.stop();
+    } else if (!_shimmer.isAnimating) {
+      _shimmer.repeat();
+    }
   }
 
   @override
@@ -40,6 +49,12 @@ class _RollingShimmerTextState extends State<RollingShimmerText>
     // 底色取与转圈同族的浅灰；流光为白色，深浅色模式下都比底色亮
     final base =
         CupertinoDynamicColor.resolve(CupertinoColors.secondaryLabel, context);
+    if (MediaQuery.disableAnimationsOf(context)) {
+      return Text(widget.text,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(fontSize: widget.fontSize, color: base));
+    }
     const highlight = Color(0xFFFFFFFF);
     return RepaintBoundary(
       child: AnimatedBuilder(

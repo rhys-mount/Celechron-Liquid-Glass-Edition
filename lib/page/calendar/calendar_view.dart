@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
-import 'package:celechron/design/card_detail_line.dart';
 import 'package:celechron/design/custom_decoration.dart';
+import 'package:celechron/design/event_list_card.dart';
 import 'package:celechron/design/liquid_glass/home_scroll_insets.dart';
 import 'package:celechron/design/liquid_glass/navigation_action.dart';
 import 'package:celechron/design/sub_title.dart';
@@ -11,13 +11,11 @@ import 'package:celechron/page/task/task_edit_page.dart';
 import 'package:celechron/page/flow/flow_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show defaultTargetPlatform;
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:celechron/model/period.dart';
 import 'package:celechron/utils/utils.dart';
 
-import 'package:celechron/design/round_rectangle_card.dart';
 import 'package:celechron/design/custom_colors.dart';
 import 'package:celechron/page/scholar/course_detail/course_detail_view.dart';
 import 'package:celechron/page/calendar/schedule_view.dart';
@@ -74,13 +72,11 @@ class CalendarPage extends StatelessWidget {
                                   time: DateTime(day.year, day.month, day.day,
                                       now.hour, now.minute),
                                 );
-                                _taskController.updateDeadlineList();
-                                _taskController.taskList.refresh();
                               },
                             ),
                             (
                               icon: CupertinoIcons.calendar,
-                              label: '切换视图',
+                              label: '查看周课表',
                               onPressed: toggleView,
                             ),
                           ]),
@@ -88,7 +84,7 @@ class CalendarPage extends StatelessWidget {
                       )
                     : NavigationAction(
                         icon: CupertinoIcons.list_bullet,
-                        label: '切换视图',
+                        label: '返回月历',
                         onPressed: toggleView,
                       ),
                 padHorizontal: 16,
@@ -174,20 +170,22 @@ class CalendarPage extends StatelessWidget {
                         return _calendarController.getEventsForDay(day);
                       },
                       calendarStyle: CalendarStyle(
-                        markersAnchor: -0.1,
-                        markersMaxCount: 10,
                         selectedDecoration: BoxDecoration(
                           color: CupertinoDynamicColor.resolve(
-                              CupertinoColors.activeBlue.withValues(alpha: 0.5),
-                              context),
+                            CupertinoTheme.of(context).primaryColor,
+                            context,
+                          ).withValues(alpha: 0.22),
                           shape: BoxShape.circle,
+                          border: Border.all(
+                            color: CupertinoTheme.of(context).primaryColor,
+                          ),
                         ),
                         selectedTextStyle:
                             CupertinoTheme.of(context).textTheme.textStyle,
                         todayDecoration: BoxDecoration(
                           color: CupertinoDynamicColor.resolve(
                               CupertinoColors.inactiveGray
-                                  .withValues(alpha: 0.5),
+                                  .withValues(alpha: 0.24),
                               context),
                           shape: BoxShape.circle,
                         ),
@@ -196,7 +194,7 @@ class CalendarPage extends StatelessWidget {
                         defaultTextStyle:
                             CupertinoTheme.of(context).textTheme.textStyle,
                       ),
-                      calendarBuilders: const CalendarBuilders(
+                      calendarBuilders: const CalendarBuilders<Period>(
                         singleMarkerBuilder: singleMarkerBuilder,
                       ),
                     ),
@@ -305,7 +303,7 @@ class CalendarPage extends StatelessWidget {
     Task? res = await showCupertinoModalPopup(
       context: context,
       builder: (BuildContext context) {
-        return TaskEditPage(deadline);
+        return TaskEditPage(deadline, isNew: true);
       },
     );
     if (res != null &&
@@ -313,12 +311,13 @@ class CalendarPage extends StatelessWidget {
         res.status != TaskStatus.deleted) {
       _taskController.taskList.add(res);
       _taskController.updateDeadlineListTime();
+      _taskController.updateDeadlineList();
       _taskController.taskList.refresh();
     }
   }
 
   Future<void> showCardDialog(BuildContext context, Task deadline) async {
-    return showDialog<void>(
+    return showCupertinoDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return CupertinoAlertDialog(
@@ -332,7 +331,7 @@ class CalendarPage extends StatelessWidget {
               children: [
                 if (deadline.repeatType != TaskRepeatType.norepeat) ...[
                   const Text(
-                    '重复日程，接下来的时段：',
+                    '重复日程。编辑将应用于整组日程。',
                   ),
                 ],
                 Text(
@@ -363,28 +362,30 @@ class CalendarPage extends StatelessWidget {
               CupertinoDialogAction(
                 onPressed: () async {
                   Navigator.of(context).pop();
-                  Task res = await showCupertinoModalPopup(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return TaskEditPage(deadline);
-                        },
-                      ) ??
-                      deadline;
+                  final res = await TaskEditPage.open(context, deadline);
+                  if (res == null) return;
+                  final needsReplan = deadline.differentForFlow(res) ||
+                      deadline.startTime != res.startTime ||
+                      deadline.summary != res.summary ||
+                      deadline.location != res.location ||
+                      deadline.description != res.description;
                   deadline.copy(res);
                   _taskController.updateDeadlineList();
-                  _taskController.updateDeadlineListTime();
-                  // 重新规划
-                  _flowController.removeFlowInFlowList();
-                  DateTime now = DateTime.now();
-                  DateTime startsAt = DateTime(
-                      now.year, now.month, now.day, now.hour, now.minute);
-                  _flowController.generateNewFlowList(startsAt);
+                  if (needsReplan) {
+                    _taskController.updateDeadlineListTime();
+                    _flowController.removeFlowInFlowList();
+                    final now = DateTime.now();
+                    _flowController.generateNewFlowList(DateTime(
+                        now.year, now.month, now.day, now.hour, now.minute));
+                  }
                   _taskController.taskList.refresh();
+                  _taskController.saveDeadlineListToDb();
                 },
                 child: const Text('编辑'),
               ),
             if (deadline.type == TaskType.fixedlegacy)
               CupertinoDialogAction(
+                isDestructiveAction: true,
                 onPressed: () async {
                   Navigator.of(context).pop();
                   deadline.status = TaskStatus.deleted;
@@ -400,14 +401,12 @@ class CalendarPage extends StatelessWidget {
   }
 
   Widget createCard(context, Period period) {
-    return RoundRectangleCard.content(
-      animate: false,
+    return EventListCard(
+      period: period,
+      timeLabel: period.friendlyTimeStartDayBased,
       onTap:
           (period.type == PeriodType.classes || period.type == PeriodType.test)
-              ? () async => Navigator.of(context, rootNavigator: true).push(
-                  CupertinoPageRoute(
-                      builder: (context) =>
-                          CourseDetailPage(courseId: period.fromUid)))
+              ? () => CourseDetailPage.open(context, period.fromUid)
               : (period.type == PeriodType.user
                   ? (() async {
                       Task? deadline;
@@ -422,74 +421,12 @@ class CalendarPage extends StatelessWidget {
                       }
                     })
                   : null),
-      child: Row(
-        spacing: 10,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: 5,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  spacing: 7,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 5),
-                      child: SizedBox.square(
-                        dimension: 11,
-                        child: DecoratedBox(
-                          decoration: customDecoration(
-                            color: switch (period.type) {
-                              PeriodType.classes =>
-                                TimeColors.colorFromHour(period.startTime.hour),
-                              PeriodType.test => CupertinoColors.systemPink,
-                              PeriodType.user when period.fromUid != null =>
-                                UidColors.colorFromUid(
-                                    period.fromFromUid ?? period.fromUid),
-                              _ => CupertinoColors.inactiveGray,
-                            },
-                            shape: periodTypeShape[period.type]!,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        period.summary,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: CupertinoColors.label.resolveFrom(context),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                CardDetailLine(
-                    CupertinoIcons.clock, period.friendlyTimeStartDayBased,
-                    emphasis: true),
-                if (period.location.isNotEmpty)
-                  CardDetailLine(CupertinoIcons.location, period.location),
-              ],
-            ),
-          ),
-          if (period.type == PeriodType.classes ||
-              period.type == PeriodType.test ||
-              period.type == PeriodType.user)
-            const CupertinoListTileChevron(),
-        ],
-      ),
     );
   }
 
-  static Widget singleMarkerBuilder(context, day, Period event) {
-    if (event.type == PeriodType.virtual) {
-      return const SizedBox.shrink();
-    }
-
+  static Widget singleMarkerBuilder(
+      BuildContext context, DateTime day, Period event) {
+    if (event.type == PeriodType.virtual) return const SizedBox.shrink();
     Color color = CupertinoColors.systemPink;
     if (event.type == PeriodType.classes) {
       color = TimeColors.colorFromHour(event.startTime.hour);

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:celechron/utils/platform_features.dart';
+import 'package:celechron/model/option.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -11,6 +12,17 @@ import '../utils/utils.dart';
 
 class ECardWidgetMessenger {
   static const _platform = MethodChannel('top.celechron.celechron/ecardWidget');
+
+  static Future<void> setAppearance(BrightnessMode mode) async {
+    if (!PlatformFeatures.hasWidgetSupport) return;
+    try {
+      await _platform.invokeMethod<void>('setAppearance', mode.name);
+    } on MissingPluginException {
+      // A client without native widgets doesn't need an appearance update.
+    } on PlatformException {
+      // Keep the in-app theme usable even if a widget cannot be refreshed.
+    }
+  }
 
   /// Allows the iPhone companion to refresh a credential after Watch reports
   /// an explicit authentication failure. This reuses the same CAS flow as the

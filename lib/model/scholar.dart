@@ -19,6 +19,23 @@ import 'package:celechron/http/grs_spider.dart';
 import 'package:celechron/database/database_helper.dart';
 
 class Scholar {
+  static final _semesterName = RegExp(r'^(\d{4})-\d{4}(春夏|秋冬)$');
+
+  static int _compareSemesters(Semester first, Semester second) {
+    final firstTerm = _semesterName.firstMatch(first.name);
+    final secondTerm = _semesterName.firstMatch(second.name);
+    if (firstTerm == null || secondTerm == null) {
+      if (firstTerm != null) return -1;
+      if (secondTerm != null) return 1;
+      return second.name.compareTo(first.name);
+    }
+    final yearOrder = secondTerm.group(1)!.compareTo(firstTerm.group(1)!);
+    if (yearOrder != 0) return yearOrder;
+    final firstTermRank = firstTerm.group(2) == '春夏' ? 2 : 1;
+    final secondTermRank = secondTerm.group(2) == '春夏' ? 2 : 1;
+    return secondTermRank.compareTo(firstTermRank);
+  }
+
   Scholar();
 
   // 构造用户对象
@@ -96,11 +113,10 @@ class Scholar {
 
   Semester get thisSemester {
     if (semesters.length > 1) {
-      if (semesters[1]
-          .periods
-          .last
-          .endTime
-          .isAfter(DateTime.now().subtract(const Duration(days: 14)))) {
+      final previousPeriods = semesters[1].periods;
+      if (previousPeriods.isNotEmpty &&
+          previousPeriods.last.endTime
+              .isAfter(DateTime.now().subtract(const Duration(days: 14)))) {
         return semesters[1];
       } else {
         return semesters[0];
@@ -470,7 +486,7 @@ class Scholar {
           semesters[existingIndex].mergePartialFrom(incoming);
         }
       }
-      semesters.sort((a, b) => b.name.compareTo(a.name));
+      semesters.sort(_compareSemesters);
     }
     if (errorResult[3] == false) {
       todos = tempTodos;
@@ -598,6 +614,7 @@ class Scholar {
       }
     }
 
+    semesters.sort(_compareSemesters);
     grades = {};
     final rawGrades = asStringMap(json['grades']) ?? const {};
     for (final entry in rawGrades.entries) {

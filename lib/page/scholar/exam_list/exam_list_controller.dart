@@ -16,14 +16,25 @@ class ExamListController extends GetxController {
     semesterIndex = semesters.indexWhere((e) => e.name == initialName).obs;
   }
 
-  Semester get semester => _scholar.value.semesters[semesterIndex.value];
+  int get selectedIndex {
+    final index = semesterIndex.value;
+    return index >= 0 && index < semesters.length ? index : 0;
+  }
+
   List<Semester> get semesters => _scholar.value.semesters;
   Duration get durationToLastUpdate => _durationToLastUpdate.value;
 
   List<List<Exam>> get exams {
-    semester.sortExams();
+    if (semesters.isEmpty) return [];
+    final semester = semesters[selectedIndex];
+    final sorted = [...semester.exams]..sort((a, b) {
+        final startA = a.time.firstOrNull;
+        final startB = b.time.firstOrNull;
+        if (startA == null) return startB == null ? 0 : 1;
+        return startB == null ? -1 : startA.compareTo(startB);
+      });
     final groupedExams = <String, List<Exam>>{};
-    for (final exam in semester.exams) {
+    for (final exam in sorted) {
       groupedExams.putIfAbsent(_examDayKey(exam), () => []).add(exam);
     }
     return groupedExams.values.toList();
@@ -31,6 +42,7 @@ class ExamListController extends GetxController {
 
   String _examDayKey(Exam exam) {
     if (exam.dateLabel != null) return 'label:${exam.dateLabel}';
+    if (exam.time.isEmpty) return 'unknown';
     final date = exam.time[0];
     return 'date:${date.year}-${date.month}-${date.day}';
   }

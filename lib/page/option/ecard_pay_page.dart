@@ -1,161 +1,176 @@
 import 'dart:io';
-import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-import 'package:get/get.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:get/get.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
+import 'package:celechron/design/content_empty_state.dart';
 import 'package:celechron/design/persistent_headers.dart';
 import '../../http/zjuServices/ecard.dart';
+import '../../http/zjuServices/exceptions.dart';
 import '../../utils/utils.dart';
+import 'login_page.dart';
+import 'option_controller.dart';
 
-class ECardPayPage extends StatelessWidget {
-  ECardPayPage({super.key});
+enum _PaymentCodeState { loading, signedOut, failed, ready }
 
-  final _httpClient = HttpClient();
+class ECardPayPage extends StatefulWidget {
+  const ECardPayPage({super.key});
 
-  /// 测试账号学号；未登录时回退到该账号，便于本地预览付款码。
+  @override
+  State<ECardPayPage> createState() => _ECardPayPageState();
+}
+
+class _ECardPayPageState extends State<ECardPayPage> {
   static const _testAccount = '3200000000';
+  final _httpClient = HttpClient();
+  var _state = _PaymentCodeState.loading;
+  String? _barcode;
 
-  Future<String?> _requestNewCode() async {
-    const secureStorage = FlutterSecureStorage();
-    var synjonesAuth = await secureStorage.read(
-        key: 'synjonesAuth', iOptions: secureStorageIOSOptions);
-    var eCardAccount = await secureStorage.read(
-        key: 'eCardAccount', iOptions: secureStorageIOSOptions);
+  @override
+  void initState() {
+    super.initState();
+    _requestNewCode(initial: true);
+  }
 
-    // 未登录或测试账号：不请求真实接口，生成模拟付款码
-    if (synjonesAuth == null || synjonesAuth == _testAccount) {
-      return List.generate(16, (_) => (Random().nextInt(10)).toString()).join();
-    }
+  @override
+  void dispose() {
+    _httpClient.close(force: true);
+    super.dispose();
+  }
 
-    eCardAccount ??= await ECard.getAccount(_httpClient, synjonesAuth);
+  void _showState(_PaymentCodeState state, {String? barcode}) {
+    if (!mounted) return;
+    setState(() {
+      _state = state;
+      _barcode = barcode;
+    });
+  }
+
+  Future<void> _requestNewCode({bool initial = false}) async {
+    if (!initial && _state == _PaymentCodeState.loading) return;
+    if (!initial) _showState(_PaymentCodeState.loading);
     try {
+      const secureStorage = FlutterSecureStorage();
+      final auth = await secureStorage.read(
+          key: 'synjonesAuth', iOptions: secureStorageIOSOptions);
+      if (!mounted) return;
+      if (auth == null || auth.trim().isEmpty || auth == _testAccount) {
+        _showState(_PaymentCodeState.signedOut);
+        return;
+      }
+      final storedAccount = await secureStorage.read(
+          key: 'eCardAccount', iOptions: secureStorageIOSOptions);
+      if (!mounted) return;
+      final account =
+          storedAccount ?? await ECard.getAccount(_httpClient, auth);
+      if (!mounted) return;
       _httpClient.userAgent =
-          "E-CampusZJU/2.3.20 (iPhone; iOS 17.5.1; Scale/3.00)";
-      return await ECard.getBarcode(_httpClient, synjonesAuth, eCardAccount);
-    } catch (e) {
-      // 网络/鉴权失败时同样回退到测试码，避免页面空白
-      return List.generate(16, (_) => (Random().nextInt(10)).toString()).join();
+          'E-CampusZJU/2.3.20 (iPhone; iOS 17.5.1; Scale/3.00)';
+      final barcode = await ECard.getBarcode(_httpClient, auth, account);
+      _showState(_PaymentCodeState.ready, barcode: barcode);
+    } on AuthenticationExpiredException {
+      _showState(_PaymentCodeState.signedOut);
+    } on Exception {
+      _showState(_PaymentCodeState.failed);
     }
   }
 
-  final RxString _barcode = ''.obs;
-  final RxBool _loading = true.obs;
-
   @override
   Widget build(BuildContext context) {
-    _requestNewCode().then((code) {
-      if (code == null) {
-        _requestNewCode().then((code) {
-          _loading.value = false;
-          _barcode.value = code ?? '';
-        });
-      } else {
-        _loading.value = false;
-        _barcode.value = code;
-      }
-    });
     return CupertinoPageScaffold(
       child: SafeArea(
         child: CustomScrollView(
           slivers: [
             const CelechronSliverTextHeader(subtitle: '付款码'),
             SliverFillRemaining(
-                child: Column(
-              children: [
-                const Spacer(
-                  flex: 4,
-                ),
-                Obx(() {
-                  if (_loading.value) {
-                    return const CupertinoActivityIndicator();
-                  } else {
-                    return GestureDetector(
-                        onTap: () => _requestNewCode()
-                            .then((value) => _barcode.value = value ?? ''),
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            // White background
-                            Container(
-                              width: 200,
-                              height: 200,
+              hasScrollBody: false,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: switch (_state) {
+                      _PaymentCodeState.loading => const [
+                          CupertinoActivityIndicator(),
+                          SizedBox(height: 12),
+                          Text('正在获取付款码…'),
+                        ],
+                      _PaymentCodeState.signedOut => [
+                          const ContentEmptyState(
+                            icon: CupertinoIcons.person_crop_circle,
+                            title: '校园卡未登录或登录已过期',
+                            verticalPadding: 8,
+                          ),
+                          const Text('请登录校园账号后再试。',
+                              textAlign: TextAlign.center),
+                          if (Get.isRegistered<OptionController>(
+                              tag: 'optionController'))
+                            CupertinoButton(
+                              onPressed: () async {
+                                final signedIn =
+                                    await showCupertinoModalPopup<bool>(
+                                  context: context,
+                                  builder: (_) => const LoginForm(),
+                                );
+                                if (mounted && signedIn == true) {
+                                  await _requestNewCode();
+                                }
+                              },
+                              child: const Text('去登录'),
+                            ),
+                        ],
+                      _PaymentCodeState.failed => [
+                          const ContentEmptyState(
+                            icon: CupertinoIcons.exclamationmark_circle,
+                            title: '暂时无法获取付款码',
+                          ),
+                          const Text('请检查网络连接后重试。',
+                              textAlign: TextAlign.center),
+                          CupertinoButton(
+                            onPressed: _requestNewCode,
+                            child: const Text('重试'),
+                          ),
+                        ],
+                      _PaymentCodeState.ready => [
+                          ExcludeSemantics(
+                            child: DecoratedBox(
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: CupertinoColors.white,
                                 borderRadius: BorderRadius.circular(10),
                               ),
+                              child: _barcode!.length < 30
+                                  ? QrImageView(
+                                      data: _barcode!, version: 3, size: 200)
+                                  : Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Text(_barcode!,
+                                          style: const TextStyle(
+                                              color: CupertinoColors.black)),
+                                    ),
                             ),
-                            _barcode.value.isNotEmpty &&
-                                    _barcode.value.length < 30
-                                ? QrImageView(
-                                    data: _barcode.value, version: 3, size: 200)
-                                : Text(_barcode.value,
-                                    style: const TextStyle(
-                                        color: CupertinoColors.black)),
-                          ],
-                        ));
-                  }
-                }),
-                const SizedBox(
-                  height: 20,
-                ),
-                Obx(() {
-                  if (_loading.value) {
-                    return const Text('加载中...');
-                  }
-                  return Text(
-                      '付款码：${_barcode.value.isNotEmpty ? _barcode.value : '加载失败'}');
-                }),
-                const SizedBox(
-                  height: 30,
-                ),
-                Obx(() {
-                  if (_loading.value) {
-                    return const SizedBox.shrink();
-                  }
-                  return CupertinoButton(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                    color: CupertinoColors.activeBlue,
-                    borderRadius: BorderRadius.circular(20),
-                    onPressed: () {
-                      _loading.value = true;
-                      _requestNewCode().then((value) {
-                        _loading.value = false;
-                        _barcode.value = value ?? '';
-                      });
-                    },
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          CupertinoIcons.refresh,
-                          size: 18,
-                          color: CupertinoColors.white,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          '刷新二维码',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: CupertinoColors.white,
                           ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-                const Spacer(
-                  flex: 6,
+                          const SizedBox(height: 16),
+                          if (_barcode!.length < 30)
+                            ExcludeSemantics(
+                              child: Text('付款码：$_barcode',
+                                  textAlign: TextAlign.center),
+                            ),
+                          Semantics(
+                            liveRegion: true,
+                            child: const Text('付款码已就绪'),
+                          ),
+                          CupertinoButton(
+                            onPressed: _requestNewCode,
+                            child: const Text('刷新二维码'),
+                          ),
+                        ],
+                    },
+                  ),
                 ),
-              ],
-            ))
+              ),
+            ),
           ],
         ),
       ),

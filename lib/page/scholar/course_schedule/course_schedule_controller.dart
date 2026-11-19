@@ -9,7 +9,12 @@ class CourseScheduleController extends GetxController {
   late final RxBool firstOrSecondSemester;
   RxBool hideCourseInfomation = false.obs;
 
-  Semester get semester => _scholar.value.semesters[semesterIndex.value];
+  int get selectedIndex {
+    final index = semesterIndex.value;
+    return index >= 0 && index < semesters.length ? index : 0;
+  }
+
+  Semester get semester => semesters[selectedIndex];
   List<Semester> get semesters => _scholar.value.semesters;
 
   void init(String initialName, bool initialFirstOrSecondSemester) {
@@ -27,6 +32,6 @@ class CourseScheduleController extends GetxController {
   }
 
   List<List<Session>> get sessionsByDayOfWeek => firstOrSecondSemester.value
-      ? _scholar.value.semesters[semesterIndex.value].firstHalfTimetable
-      : _scholar.value.semesters[semesterIndex.value].secondHalfTimetable;
+      ? semester.firstHalfTimetable
+      : semester.secondHalfTimetable;
 }

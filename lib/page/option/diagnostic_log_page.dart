@@ -583,6 +583,10 @@ class _DiagnosticLogPageState extends State<DiagnosticLogPage> {
                 subtitle: const Text('包含易读报告和完整原始日志'),
                 onTap: _busy ? null : _export,
               ),
+            ],
+          ),
+          CupertinoListSection.insetGrouped(
+            children: [
               CupertinoListTile(
                 title: const Text(
                   '清空测试日志',
@@ -606,7 +610,7 @@ class _DiagnosticLogPageState extends State<DiagnosticLogPage> {
               displayText,
               style: const TextStyle(
                 fontFamily: 'monospace',
-                fontSize: 11,
+                fontSize: 13,
                 height: 1.35,
               ),
             ),

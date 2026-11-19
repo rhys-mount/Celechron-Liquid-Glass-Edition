@@ -48,9 +48,10 @@ PreferredSizeWidget buildHomeTabBar(
   }
   return CupertinoTabBar(
     iconSize: 26,
-    backgroundColor: CupertinoDynamicColor.resolve(
-            CupertinoColors.secondarySystemBackground, context)
-        .withValues(alpha: 0.5),
+    height:
+        50 + (MediaQuery.textScalerOf(context).scale(12) - 12).clamp(0.0, 46.0),
+    backgroundColor:
+        CupertinoColors.secondarySystemBackground.resolveFrom(context),
     items: [
       for (final tab in _tabs)
         BottomNavigationBarItem(icon: Icon(tab.icon), label: tab.label),

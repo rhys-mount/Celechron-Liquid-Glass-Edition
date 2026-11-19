@@ -9,6 +9,7 @@ import 'package:celechron/model/task.dart';
 import 'package:celechron/page/calendar/calendar_view.dart';
 import 'package:celechron/page/flow/flow_controller.dart';
 import 'package:celechron/page/flow/flow_view.dart';
+import 'package:celechron/page/scholar/course_detail/course_detail_view.dart';
 import 'package:celechron/page/task/task_controller.dart';
 import 'package:celechron/page/task/task_edit_page.dart';
 import 'package:celechron/page/task/task_view.dart';
@@ -17,6 +18,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:table_calendar/table_calendar.dart';
+
+import 'support/academic_fixture.dart';
+
+class _ScholarWithPeriods extends Scholar {
+  _ScholarWithPeriods(this.periods);
+
+  @override
+  final List<Period> periods;
+}
 
 class _FakeDb extends DatabaseHelper {
   List<Task> stored = <Task>[];
@@ -135,12 +145,8 @@ void main() {
     }
   }
 
-  // RoundRectangleCard 的 onTap 是在 onTapDown 之后延迟 125ms（且必须先抬手）才触发的，
-  // 与 tester.tap() 的同帧 down+up 不兼容，这里用按住两帧再抬起来模拟真实点击。
   Future<void> tapCard(WidgetTester tester, Finder finder) async {
-    final gesture = await tester.startGesture(tester.getCenter(finder));
-    await tester.pump(const Duration(milliseconds: 50));
-    await gesture.up();
+    await tester.tap(finder);
     await pumpFor(tester, const Duration(milliseconds: 700));
   }
 
@@ -180,6 +186,98 @@ void main() {
       await pumpFor(tester, const Duration(milliseconds: 500));
       expect(find.text('开始规划'), findsNothing);
       expect(Get.find<FlowController>().isFlowListOutdated(), isTrue);
+    });
+  });
+
+  testWidgets('关闭日程编辑不修改任务或触发重排', (tester) async {
+    await tester.runAsync(() => initializeDateFormatting('zh_CN'));
+    final task = _testTask(summary: '保留原日程')
+      ..type = TaskType.fixed
+      ..genUid();
+    final page = CalendarPage();
+    taskList.add(task);
+    await runPageTest(tester, () async {
+      await tester.pumpWidget(CupertinoApp(home: page));
+      await tester.pump();
+      await tapCard(tester, find.text(task.summary));
+      await tester.tap(find.text('编辑'));
+      await pumpFor(tester, const Duration(milliseconds: 500));
+      expect(find.text('编辑日程'), findsOneWidget);
+      await tester.enterText(find.byType(CupertinoTextField).first, '放弃的内容');
+      final db = Get.find<DatabaseHelper>(tag: 'db') as _FakeDb;
+      final storedTime = db.storedTime;
+      final cachedFlow = db.storedFlow;
+      await tester.pump();
+      await tester.tap(find.byIcon(CupertinoIcons.xmark).hitTestable());
+      await pumpFor(tester, const Duration(milliseconds: 700));
+      expect(task.summary, '保留原日程');
+      expect(db.storedTime, storedTime);
+      expect(db.storedFlow, same(cachedFlow));
+      expect(find.text('编辑日程'), findsNothing);
+    });
+  });
+
+  testWidgets('新建日程没有删除操作，取消不添加项目', (tester) async {
+    await tester.runAsync(() => initializeDateFormatting('zh_CN'));
+    await runPageTest(tester, () async {
+      await tester.pumpWidget(CupertinoApp(home: CalendarPage()));
+      await tester.pump();
+      final semantics = tester.ensureSemantics();
+      try {
+        await tester.tap(find.bySemanticsLabel('添加日程或任务'));
+        await pumpFor(tester, const Duration(milliseconds: 500));
+        expect(find.text('新建日程'), findsOneWidget);
+        expect(find.text('删除日程'), findsNothing);
+        await tester.tap(find.bySemanticsLabel('关闭编辑'));
+        await pumpFor(tester, const Duration(milliseconds: 500));
+        expect(taskList, isEmpty);
+      } finally {
+        semantics.dispose();
+      }
+    });
+  });
+
+  testWidgets('两页课程卡都能查看详情，接下来保留课程倒计时', (tester) async {
+    await tester.runAsync(() => initializeDateFormatting('zh_CN'));
+    final now = DateTime.now();
+    const location = '教学楼 101';
+    final course = Period(
+      summary: academicCourse,
+      location: location,
+      description: '',
+      fromUid: academicCourseId,
+      startTime: now,
+      endTime: now.add(const Duration(minutes: 45)),
+      type: PeriodType.classes,
+    );
+    Get.find<Rx<Scholar>>(tag: 'scholar').value = _ScholarWithPeriods([course])
+      ..semesters = academicFixture().semesters;
+    await runPageTest(tester, () async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(320, 800);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      for (final page in [FlowPage(), CalendarPage()]) {
+        await tester.pumpWidget(CupertinoApp(
+          key: ValueKey(page.runtimeType),
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: const TextScaler.linear(1.5)),
+            child: child!,
+          ),
+          home: page,
+        ));
+        await tester.pump();
+        expect(find.text(location).hitTestable(), findsOneWidget);
+        expect(
+          find.textContaining('离结束还有'),
+          page is FlowPage ? findsOneWidget : findsNothing,
+        );
+        await tester.tap(find.text(academicCourse).hitTestable());
+        await pumpFor(tester, const Duration(milliseconds: 400));
+        expect(find.byType(CourseDetailPage), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      }
     });
   });
 
@@ -244,6 +342,10 @@ void main() {
       final calendar =
           find.byWidgetPredicate((widget) => widget is TableCalendar);
       final originalTop = tester.getTopLeft(calendar);
+      expect(find.text('+13'), findsNothing);
+      final calendarWidget = tester.widget<TableCalendar<Period>>(calendar);
+      expect(calendarWidget.calendarBuilders.singleMarkerBuilder, isNotNull);
+      expect(calendarWidget.eventLoader!(now), hasLength(16));
       final dayList = find.byType(CustomScrollView);
       expect(tester.getBottomRight(dayList).dy,
           tester.view.physicalSize.height / tester.view.devicePixelRatio);
@@ -347,7 +449,14 @@ void main() {
     await tester.pumpAndSettle();
     final date = find.byType(CupertinoDatePicker);
     tester.widget<CupertinoDatePicker>(date).onDateTimeChanged(newEnd);
-    Navigator.of(tester.element(date)).pop();
+    await tester.tap(find.text('取消'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('截止时间'));
+    await tester.pumpAndSettle();
+    expect(
+        tester.widget<CupertinoDatePicker>(date).initialDateTime, task.endTime);
+    tester.widget<CupertinoDatePicker>(date).onDateTimeChanged(newEnd);
+    await tester.tap(find.text('完成'));
     await tester.pumpAndSettle();
     expect(tester.widget<CupertinoTextField>(field).controller!.text, draft);
 

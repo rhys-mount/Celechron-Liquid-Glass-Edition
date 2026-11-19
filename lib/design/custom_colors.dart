@@ -1,6 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+Color themeAccent(BuildContext context) => CupertinoDynamicColor.resolve(
+    CupertinoTheme.of(context).primaryColor, context);
+
 class UidColors {
   static Color colorFromUid(String? uid) {
     int value = (uid ?? '').hashCode;

@@ -1,4 +1,4 @@
-import 'package:extended_sliver/extended_sliver.dart';
+import 'package:celechron/design/floating_filter_panel.dart';
 import 'package:flutter/cupertino.dart';
 
 import 'package:get/get.dart';
@@ -41,16 +41,7 @@ class CourseListPage extends StatelessWidget {
       child: CustomScrollView(
         slivers: [
           const CelechronSliverTextHeader(subtitle: '课程'),
-          SliverPinnedToBoxAdapter(
-            child: ColoredBox(
-              color: CupertinoDynamicColor.resolve(
-                  CupertinoColors.systemGroupedBackground, context),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
-                child: _semesterPicker(),
-              ),
-            ),
-          ),
+          SliverFloatingFilterPanel(child: _semesterPicker()),
           Obx(() {
             final courses = _courseListController.courses;
             if (courses.isEmpty) {

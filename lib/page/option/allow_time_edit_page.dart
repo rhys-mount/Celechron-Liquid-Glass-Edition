@@ -1,3 +1,4 @@
+import 'package:celechron/design/action_dialogs.dart';
 import 'package:celechron/design/persistent_headers.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
@@ -44,110 +45,39 @@ class _DateTimePairEditDialogState extends State<DateTimePairEditDialog> {
     }
   }
 
+  Future<void> _editTime({required bool start}) async {
+    final value = await showDatePickerSheet(
+      context,
+      title: start ? '开始时间' : '结束时间',
+      initialValue: start ? val.first : val.second,
+      mode: CupertinoDatePickerMode.time,
+    );
+    if (!mounted || value == null) return;
+    setState(() {
+      if (start) {
+        val.first = value;
+      } else {
+        val.second = value;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return CupertinoAlertDialog(
-      title: const Text(
-        '更改时段',
-      ),
-      content: StatefulBuilder(
-        builder: (BuildContext context, StateSetter setState) {
-          return SizedBox(
-            width: double.maxFinite,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '开始：${timeToString(val.first)}',
-                      style: CupertinoTheme.of(context)
-                          .textTheme
-                          .textStyle
-                          .copyWith(
-                            fontSize: 16,
-                          ),
-                    ),
-                    CupertinoButton(
-                      onPressed: () async {
-                        await showCupertinoModalPopup(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return CupertinoPageScaffold(
-                                child: SizedBox(
-                                  height: MediaQuery.of(context)
-                                          .copyWith()
-                                          .size
-                                          .height /
-                                      3,
-                                  child: CupertinoDatePicker(
-                                    initialDateTime: val.first,
-                                    use24hFormat: true,
-                                    minuteInterval: 1,
-                                    mode: CupertinoDatePickerMode.time,
-                                    onDateTimeChanged: (DateTime newTime) {
-                                      setState(() {
-                                        val.first = newTime;
-                                      });
-                                    },
-                                  ),
-                                ),
-                              );
-                            });
-                      },
-                      child: const Text('更改'),
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '结束：${timeToString(val.second)}',
-                      style: CupertinoTheme.of(context)
-                          .textTheme
-                          .textStyle
-                          .copyWith(
-                            fontSize: 16,
-                          ),
-                    ),
-                    CupertinoButton(
-                      onPressed: () async {
-                        await showCupertinoModalPopup(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return CupertinoPageScaffold(
-                                child: SizedBox(
-                                  height: MediaQuery.of(context)
-                                          .copyWith()
-                                          .size
-                                          .height /
-                                      3,
-                                  child: CupertinoDatePicker(
-                                    initialDateTime: val.second,
-                                    use24hFormat: true,
-                                    minuteInterval: 1,
-                                    mode: CupertinoDatePickerMode.time,
-                                    onDateTimeChanged: (DateTime newTime) {
-                                      setState(() {
-                                        val.second = newTime;
-                                      });
-                                    },
-                                  ),
-                                ),
-                              );
-                            });
-                      },
-                      child: const Text('更改'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        },
+      title: const Text('更改时段'),
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          CupertinoButton(
+            onPressed: () => _editTime(start: true),
+            child: Text('开始时间 ${timeToString(val.first)}'),
+          ),
+          CupertinoButton(
+            onPressed: () => _editTime(start: false),
+            child: Text('结束时间 ${timeToString(val.second)}'),
+          ),
+        ],
       ),
       actions: [
         CupertinoDialogAction(
@@ -321,6 +251,7 @@ class _AllowTimeEditPageState extends State<AllowTimeEditPage> {
                               },
                               child: const Icon(
                                 CupertinoIcons.pencil,
+                                semanticLabel: '更改时段',
                                 color: CupertinoColors.activeBlue,
                               ),
                             ),
@@ -336,6 +267,7 @@ class _AllowTimeEditPageState extends State<AllowTimeEditPage> {
                               },
                               child: const Icon(
                                 CupertinoIcons.delete,
+                                semanticLabel: '删除时段',
                                 color: CupertinoColors.destructiveRed,
                               ),
                             ),

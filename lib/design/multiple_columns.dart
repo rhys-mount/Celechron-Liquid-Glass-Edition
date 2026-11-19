@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'card_action.dart';
 
 class MultipleColumns extends StatelessWidget {
   final List<Widget> contents;
@@ -55,17 +56,38 @@ class _ColumnWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-        child: GestureDetector(
-            onTap: onTap,
-            behavior: HitTestBehavior.opaque,
-            child: Column(
+        child: CardAction(
+      onTap: onTap,
+      child: SizedBox(
+        width: double.infinity,
+        child: Column(
+          children: [
+            content,
+            Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 3,
               children: [
-                content,
-                Text(title,
-                    style: const TextStyle(
-                        color: CupertinoColors.systemGrey, fontSize: 14)),
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: CupertinoColors.label
+                        .resolveFrom(context)
+                        .withValues(alpha: 0.68),
+                    fontSize: 14,
+                  ),
+                ),
+                if (onTap != null)
+                  Icon(CupertinoIcons.chevron_forward,
+                      size: 10,
+                      color:
+                          CupertinoColors.secondaryLabel.resolveFrom(context)),
               ],
-            )));
+            ),
+          ],
+        ),
+      ),
+    ));
   }
 }
 

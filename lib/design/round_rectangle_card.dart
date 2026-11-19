@@ -1,8 +1,7 @@
-import 'dart:async';
-
+import 'package:celechron/design/card_action.dart';
 import 'package:flutter/cupertino.dart';
 
-class RoundRectangleCard extends StatefulWidget {
+class RoundRectangleCard extends StatelessWidget {
   final Widget child;
   final Function()? onTap;
   final bool animate;
@@ -40,48 +39,11 @@ class RoundRectangleCard extends StatefulWidget {
         ];
 
   @override
-  State<RoundRectangleCard> createState() => _RoundRectangleCardState();
-}
-
-class _RoundRectangleCardState extends State<RoundRectangleCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.animate) {
-      _animationController = AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 200),
-        reverseDuration: const Duration(milliseconds: 400),
-      );
-      _scaleAnimation = Tween<double>(begin: 1, end: 0.95).animate(
-        CurvedAnimation(
-          parent: _animationController,
-          curve: Curves.easeInOut,
-        ),
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    if (widget.animate) {
-      _animationController.dispose();
-    }
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final brightness = CupertinoTheme.of(context).brightness ??
         MediaQuery.of(context).platformBrightness;
-    var isDown = false;
-    var isCancel = false;
     var core = Container(
-        padding: widget.padding,
+        padding: padding,
         // decoration: BoxDecoration(
         //     borderRadius: BorderRadius.circular(12),
         //     // In light mode, color is white; in dark mode, color is black
@@ -95,49 +57,18 @@ class _RoundRectangleCardState extends State<RoundRectangleCard>
         //                 .instance.platformDispatcher.platformBrightness ==
         //             Brightness.dark
         //         ? null
-        //         : widget.boxShadow),
+        //         : boxShadow),
         // 修改了颜色控制逻辑，应该跟随应用设置而非系统设置
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(widget.cornerRadius),
-          boxShadow: brightness == Brightness.dark ? null : widget.boxShadow,
+          borderRadius: BorderRadius.circular(cornerRadius),
+          boxShadow: brightness == Brightness.dark ? null : boxShadow,
           color: brightness == Brightness.dark
               ? CupertinoDynamicColor.resolve(
                   CupertinoColors.secondarySystemBackground, context)
               : CupertinoDynamicColor.resolve(CupertinoColors.white, context),
         ),
-        child: widget.child);
-    return widget.animate
-        ? GestureDetector(
-            onTapDown: (_) async {
-              isDown = true;
-              isCancel = false;
-              _animationController.forward();
-              await Future.delayed(const Duration(milliseconds: 125));
-              isDown = false;
-              if (isCancel) {
-                if (widget.onTap != null) {
-                  widget.onTap?.call();
-                }
-                _animationController.reverse();
-                isCancel = false;
-              }
-            },
-            onTapUp: (_) async {
-              isCancel = true;
-              if (!isDown) _animationController.reverse();
-            },
-            onTapCancel: () async => _animationController.reverse(),
-            child: ScaleTransition(scale: _scaleAnimation, child: core),
-          )
-        : widget.onTap == null
-            ? core
-            : CupertinoButton(
-                minimumSize: Size.zero,
-                padding: EdgeInsets.zero,
-                pressedOpacity: 0.78,
-                onPressed: widget.onTap,
-                child: core,
-              );
+        child: child);
+    return CardAction(onTap: onTap, child: core);
   }
 }
 

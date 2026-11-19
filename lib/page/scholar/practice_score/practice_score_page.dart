@@ -209,7 +209,9 @@ class PracticeScoreDetailPage extends StatelessWidget {
                     children: [
                       for (var index = 0; index < rows.length; index++) ...[
                         _DetailRow(
-                            label: rows[index].$1, value: rows[index].$2),
+                          label: rows[index].$1,
+                          value: rows[index].$2,
+                        ),
                         if (index != rows.length - 1) const _Divider(),
                       ],
                     ],
@@ -310,7 +312,7 @@ class _SummaryCard extends StatelessWidget {
           ],
           const SizedBox(height: 10),
           const Text(
-            '正式汇总与项目记录可能不完全一致，项目明细仍按 getSqjl 原样展示。',
+            '正式汇总与项目记录中的记点可能不同，明细显示每个项目的原始记录。',
             style: TextStyle(
               color: CupertinoColors.secondaryLabel,
               fontSize: 13,
@@ -334,7 +336,7 @@ class _NoDetailsCard extends StatelessWidget {
         source == PracticeDataSource.zdbkCache;
     return _Card(
       child: Text(
-        zdbkOnly ? '当前仅获取到旧实践汇总，暂无 getSqjl 项目明细。' : '当前 getSqjl 项目明细不可用，请稍后刷新。',
+        zdbkOnly ? '目前只有旧版实践汇总，没有项目明细。' : '暂时无法获取项目明细，请稍后刷新。',
         key: const ValueKey('practice-no-details'),
         style: const TextStyle(
           color: CupertinoColors.secondaryLabel,
@@ -498,28 +500,27 @@ class _Card extends StatelessWidget {
 class _DetailRow extends StatelessWidget {
   final String label;
   final String value;
-
   const _DetailRow({required this.label, required this.value});
 
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 112,
-              child: Text(
-                label,
-                style: const TextStyle(color: CupertinoColors.secondaryLabel),
-              ),
-            ),
-            Expanded(
-              child: Text(value, textAlign: TextAlign.right),
-            ),
-          ],
-        ),
-      );
+  Widget build(BuildContext context) {
+    final caption = Text(label,
+        style: TextStyle(
+            color: CupertinoColors.label
+                .resolveFrom(context)
+                .withValues(alpha: 0.70)));
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: caption),
+          const SizedBox(width: 12),
+          Expanded(child: Text(value, textAlign: TextAlign.end)),
+        ],
+      ),
+    );
+  }
 }
 
 class _Divider extends StatelessWidget {

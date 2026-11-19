@@ -1,10 +1,12 @@
+import 'package:celechron/design/card_action.dart';
 import 'package:flutter/cupertino.dart';
 
-class TwoLineCard extends StatefulWidget {
+class TwoLineCard extends StatelessWidget {
   final String title;
   final String content;
   final String? extraContent;
   final bool withColoredFont;
+  final bool hideAccentBar;
   final bool animate;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
@@ -21,6 +23,7 @@ class TwoLineCard extends StatefulWidget {
     this.extraContent,
     this.animate = false,
     this.withColoredFont = false,
+    this.hideAccentBar = false,
     this.onTap,
     this.onLongPress,
     this.backgroundColor = CupertinoColors.systemBackground,
@@ -34,57 +37,20 @@ class TwoLineCard extends StatefulWidget {
       const TwoLineCard(title: 'title', content: 'content');
 
   @override
-  State<TwoLineCard> createState() => _TwoLineCardState();
-}
-
-class _TwoLineCardState extends State<TwoLineCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.animate) {
-      _animationController = AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 200),
-        reverseDuration: const Duration(milliseconds: 400),
-      );
-      _scaleAnimation = Tween<double>(begin: 1, end: 0.95).animate(
-        CurvedAnimation(
-          parent: _animationController,
-          curve: Curves.easeInOut,
-        ),
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    if (widget.animate) {
-      _animationController.dispose();
-    }
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    var isDown = false;
-    var isCancel = false;
     var brightness = CupertinoTheme.of(context).brightness ??
         MediaQuery.of(context).platformBrightness;
 
-    if (widget.transparent) {
+    if (transparent) {
       return Container(
-        height: widget.height,
-        width: widget.width,
+        height: height,
+        width: width,
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           // add a colored edge
           children: [
-            Text(widget.title,
+            Text(title,
                 style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
                       color: const Color.fromRGBO(0, 0, 0, 0),
                       fontSize: 14,
@@ -95,7 +61,7 @@ class _TwoLineCardState extends State<TwoLineCard>
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  widget.content,
+                  content,
                   style:
                       CupertinoTheme.of(context).textTheme.textStyle.copyWith(
                             fontSize: 18,
@@ -104,9 +70,9 @@ class _TwoLineCardState extends State<TwoLineCard>
                             color: const Color.fromRGBO(0, 0, 0, 0),
                           ),
                 ),
-                if (widget.extraContent != null)
+                if (extraContent != null)
                   Text(
-                    ' / ${widget.extraContent}',
+                    ' / ${extraContent}',
                     style: CupertinoTheme.of(context)
                         .textTheme
                         .textStyle
@@ -123,8 +89,8 @@ class _TwoLineCardState extends State<TwoLineCard>
       );
     }
 
-    final tint = CupertinoDynamicColor.resolve(widget.backgroundColor, context);
-    final background = widget.mutedTint
+    final tint = CupertinoDynamicColor.resolve(backgroundColor, context);
+    final background = mutedTint
         ? Color.alphaBlend(
             tint.withValues(alpha: brightness == Brightness.dark ? 0.12 : 0.48),
             CupertinoColors.secondarySystemGroupedBackground
@@ -134,14 +100,14 @@ class _TwoLineCardState extends State<TwoLineCard>
             ? CupertinoColors.secondarySystemFill
             : tint;
     var core = Container(
-      height: widget.height,
-      width: widget.width,
-      padding: EdgeInsets.all(widget.mutedTint ? 11 : 16),
+      height: height,
+      width: width,
+      padding: EdgeInsets.all(mutedTint ? 11 : 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
         color: background,
         // boxShadow
-        boxShadow: widget.mutedTint
+        boxShadow: mutedTint
             ? const []
             : const [
                 BoxShadow(
@@ -159,9 +125,9 @@ class _TwoLineCardState extends State<TwoLineCard>
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
             child: Text(
-              widget.title,
+              title,
               style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
-                    color: widget.mutedTint
+                    color: mutedTint
                         ? CupertinoColors.secondaryLabel.resolveFrom(context)
                         : CupertinoTheme.of(context)
                             .textTheme
@@ -174,14 +140,14 @@ class _TwoLineCardState extends State<TwoLineCard>
             ),
           ),
           const SizedBox(height: 2),
-          widget.withColoredFont
+          withColoredFont || hideAccentBar
               ? const SizedBox(height: 4)
               : SizedBox(
                   height: 4,
                   child: Container(
                     decoration: BoxDecoration(
                       color: CupertinoDynamicColor.resolve(
-                          widget.backgroundColor, context),
+                          backgroundColor, context),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -194,37 +160,41 @@ class _TwoLineCardState extends State<TwoLineCard>
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  widget.content,
-                  style:
-                      CupertinoTheme.of(context).textTheme.textStyle.copyWith(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                            color: (widget.withColoredFont &&
-                                    brightness == Brightness.dark)
+                  content,
+                  style: CupertinoTheme.of(context)
+                      .textTheme
+                      .textStyle
+                      .copyWith(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                        color:
+                            (withColoredFont && brightness == Brightness.dark)
                                 ? CupertinoDynamicColor.resolve(
-                                    widget.backgroundColor, context)
+                                    backgroundColor, context)
                                 : CupertinoTheme.of(context)
                                     .textTheme
                                     .textStyle
                                     .color,
-                          ),
+                      ),
                 ),
-                if (widget.extraContent != null)
+                if (extraContent != null)
                   Text(
-                    ' / ${widget.extraContent}',
-                    style:
-                        CupertinoTheme.of(context).textTheme.textStyle.copyWith(
-                              fontSize: 12,
-                              color: (widget.withColoredFont &&
-                                      brightness == Brightness.dark)
+                    ' / ${extraContent}',
+                    style: CupertinoTheme.of(context)
+                        .textTheme
+                        .textStyle
+                        .copyWith(
+                          fontSize: 12,
+                          color:
+                              (withColoredFont && brightness == Brightness.dark)
                                   ? CupertinoDynamicColor.resolve(
-                                      widget.backgroundColor, context)
+                                      backgroundColor, context)
                                   : CupertinoTheme.of(context)
                                       .textTheme
                                       .textStyle
                                       .color,
-                            ),
+                        ),
                   ),
               ],
             ),
@@ -233,34 +203,11 @@ class _TwoLineCardState extends State<TwoLineCard>
       ),
     );
 
-    return widget.animate
-        ? GestureDetector(
-            onTapDown: (_) async {
-              isDown = true;
-              isCancel = false;
-              _animationController.forward();
-              await Future.delayed(const Duration(milliseconds: 125));
-              isDown = false;
-              if (isCancel) {
-                _animationController.reverse();
-                isCancel = false;
-              }
-            },
-            onTapUp: (_) async {
-              isCancel = true;
-              if (!isDown) _animationController.reverse();
-            },
-            onTapCancel: () => _animationController.reverse(),
-            onTap: widget.onTap,
-            onLongPress: widget.onLongPress,
-            child: ScaleTransition(scale: _scaleAnimation, child: core),
-          )
-        : (widget.onTap == null && widget.onLongPress == null)
-            ? core
-            : GestureDetector(
-                onTap: widget.onTap != null ? () => widget.onTap!.call() : null,
-                onLongPress: widget.onLongPress,
-                child: core,
-              );
+    return CardAction(
+      onTap: onTap,
+      onLongPress: onLongPress,
+      pressFeedback: animate,
+      child: core,
+    );
   }
 }

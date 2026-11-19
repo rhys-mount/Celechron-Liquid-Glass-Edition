@@ -2,10 +2,8 @@
 import 'package:celechron/page/scholar/todo/todo_card.dart';
 import 'package:celechron/http/zjuServices/exceptions.dart';
 import 'package:celechron/utils/platform_features.dart';
-import 'package:extended_sliver/extended_sliver.dart';
+import 'package:celechron/design/floating_filter_panel.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
-import 'package:celechron/design/liquid_glass/glass_appearance.dart';
 import 'package:celechron/design/liquid_glass/home_scroll_insets.dart';
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
@@ -22,6 +20,7 @@ import 'package:celechron/design/rolling_shimmer_text.dart';
 
 import 'package:celechron/page/search/search_view.dart';
 import 'course_list/course_list_view.dart';
+import 'course_schedule/course_hours_cards.dart';
 import 'course_schedule/course_schedule_view.dart';
 import 'exam_list/exam_list_view.dart';
 import 'grade_detail/grade_detail_view.dart';
@@ -43,7 +42,7 @@ Future<void> showRefreshResultDialog(
   final summaryLines = messages.map((error) {
     final compact =
         shortErrorText(error).replaceAll(RegExp(r'\s+'), ' ').trim();
-    final prefix = isDegradedRefreshText(error) ? '降级：' : '失败：';
+    final prefix = isDegradedRefreshText(error) ? '沿用已有数据：' : '失败：';
     final line = '$prefix$compact';
     return line.length <= 100 ? line : '${line.substring(0, 100)}…';
   }).toList();
@@ -93,119 +92,11 @@ Future<void> showRefreshResultDialog(
   );
 }
 
-class ScholarErrorHandler extends StatelessWidget {
-  final FlutterErrorDetails errorDetails;
-  final _scholarController = Get.put(ScholarController());
-
-  ScholarErrorHandler({
-    super.key,
-    required this.errorDetails,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SliverList(
-      delegate: SliverChildListDelegate([
-        CupertinoListSection.insetGrouped(
-          header: Container(
-            padding: const EdgeInsets.only(left: 16, right: 16),
-            child: Text(
-              '获取数据时遇到问题。请检查网络连接情况，并尝试重新获取数据。\n注意：你需要完成所有的教学评价才能获取成绩信息。',
-              style: TextStyle(
-                  color: CupertinoDynamicColor.resolve(
-                      CupertinoColors.secondaryLabel, context),
-                  fontSize: 14),
-            ),
-          ),
-          children: [
-            CupertinoButton(
-              onPressed: () async {
-                final results = await _scholarController.fetchData();
-                if (context.mounted &&
-                    results.any((result) => result != null)) {
-                  await showRefreshResultDialog(context, results);
-                }
-              },
-              child: const Text('重新获取数据'),
-            ),
-          ],
-        ),
-      ]),
-    );
-  }
-}
-
 class ScholarPage extends StatelessWidget {
-  ScholarPage({super.key}) {
-    ErrorWidget.builder = (FlutterErrorDetails errorDetails) {
-      return ScholarErrorHandler(errorDetails: errorDetails);
-    };
-  }
+  ScholarPage({super.key});
 
   final _scholarController = Get.put(ScholarController());
   final ValueNotifier<bool> _isRefreshing = ValueNotifier(false);
-
-  Widget _buildSearchLauncher(BuildContext context) {
-    const label = '搜索课程、事项...';
-    void openSearch() {
-      FocusManager.instance.primaryFocus?.unfocus();
-      Navigator.of(context, rootNavigator: true).push(
-        CupertinoPageRoute(builder: (context) => SearchPage()),
-      );
-    }
-
-    final textStyle = CupertinoTheme.of(context)
-        .textTheme
-        .textStyle
-        .copyWith(height: 1.25, fontSize: 18);
-    final cupertino = CupertinoSearchTextField(
-      placeholder: label,
-      placeholderStyle: textStyle.copyWith(color: CupertinoColors.systemGrey),
-      style: textStyle,
-      borderRadius: BorderRadius.circular(12),
-      itemColor: CupertinoColors.systemGrey,
-      itemSize: 20,
-      suffixInsets: const EdgeInsetsDirectional.fromSTEB(0, 0, 5, 0),
-      prefixInsets: const EdgeInsetsDirectional.fromSTEB(10, 0, 0, 0),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-      onTap: openSearch,
-      focusNode: AlwaysDisabledFocusNode(),
-    );
-    if (!Get.isRegistered<GlassAppearance>()) return cupertino;
-    final appearance = Get.find<GlassAppearance>();
-    if (!appearance.available) return cupertino;
-
-    return Obx(() {
-      if (!appearance.enabled.value) return cupertino;
-      final color = CupertinoColors.secondaryLabel.resolveFrom(context);
-      return GlassButton.custom(
-        onTap: openSearch,
-        label: label,
-        shape: const LiquidRoundedRectangle(borderRadius: 18),
-        useOwnLayer: true,
-        quality: GlassAppearance.quality,
-        child: ExcludeSemantics(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(
-              children: [
-                Icon(CupertinoIcons.search, size: 20, color: color),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: textStyle.copyWith(color: color),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    });
-  }
 
   // 让页内横向列表在桌面端也响应鼠标拖动。外层 PageView 为支持鼠标切页开启了
   // 鼠标拖动，横向列表若不响应鼠标，拖动会漏到 PageView 上造成误切页；
@@ -233,8 +124,7 @@ class ScholarPage extends StatelessWidget {
       context,
       title: title,
       icon: icon,
-      detail:
-          age.inMinutes > 10000000 ? '获取数据时遇到问题' : '更新于 ${age.inMinutes} 分钟前',
+      detail: age.inMinutes > 10000000 ? '尚未同步' : '更新于 ${age.inMinutes} 分钟前',
       highlighted: age.inMinutes >= 5,
     );
   }
@@ -490,65 +380,19 @@ class ScholarPage extends StatelessWidget {
                               ],
                             ),
                             const SizedBox(height: 16),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TwoLineCard(
-                                      animate: true,
-                                      // With CupertinoPageTransition
-                                      onTap: () => Navigator.of(context,
-                                                  rootNavigator: true)
-                                              .push(
-                                            CupertinoPageRoute(
-                                              builder: (context) =>
-                                                  CourseSchedulePage(
-                                                      _scholarController
-                                                          .selectedSemester
-                                                          .name,
-                                                      true),
-                                              title: '课表',
-                                            ),
-                                          ),
-                                      title:
-                                          '${_scholarController.selectedSemester.firstHalfName}学期课时',
-                                      content:
-                                          '${_scholarController.selectedSemester.firstHalfSessionCount}节/两周',
-                                      backgroundColor: _scholarController
-                                                  .selectedSemester.name[9] ==
-                                              '春'
-                                          ? CustomCupertinoDynamicColors.spring
-                                          : CustomCupertinoDynamicColors.autumn,
-                                      withColoredFont: true),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: TwoLineCard(
-                                      animate: true,
-                                      onTap: () => Navigator.of(context,
-                                                  rootNavigator: true)
-                                              .push(
-                                            CupertinoPageRoute(
-                                              builder: (context) =>
-                                                  CourseSchedulePage(
-                                                      _scholarController
-                                                          .selectedSemester
-                                                          .name,
-                                                      false),
-                                              title: '课表',
-                                            ),
-                                          ),
-                                      title:
-                                          '${_scholarController.selectedSemester.secondHalfName}学期课时',
-                                      content:
-                                          '${_scholarController.selectedSemester.secondHalfSessionCount}节/两周',
-                                      backgroundColor: _scholarController
-                                                  .selectedSemester.name[9] ==
-                                              '春'
-                                          ? CustomCupertinoDynamicColors.summer
-                                          : CustomCupertinoDynamicColors.winter,
-                                      withColoredFont: true),
-                                ),
-                              ],
+                            CourseHoursCards(
+                              semester: _scholarController.selectedSemester,
+                              onSelect: (first) {
+                                final semester =
+                                    _scholarController.selectedSemester;
+                                Navigator.of(context, rootNavigator: true).push(
+                                  CupertinoPageRoute(
+                                    builder: (_) => CourseSchedulePage(
+                                        semester.name, first),
+                                    title: '课表',
+                                  ),
+                                );
+                              },
                             ),
                           ],
                         ))),
@@ -610,12 +454,13 @@ class ScholarPage extends StatelessWidget {
                                             fontWeight: FontWeight.bold)),
                               ],
                               titles: const ["总计", "一天内", "本周截止"],
-                              onTaps: [() {}, () {}, () {}],
+                              onTaps: const [null, null, null],
                             ),
                             const SizedBox(height: 16),
                             if (_scholarController.todos.isNotEmpty)
                               SizedBox(
-                                  height: 102,
+                                  height: MediaQuery.textScalerOf(context)
+                                      .scale(136),
                                   child: _mouseDraggable(
                                       context,
                                       ListView.separated(
@@ -628,7 +473,10 @@ class ScholarPage extends StatelessWidget {
                                             final todo =
                                                 _scholarController.todos[index];
                                             return SizedBox(
-                                                width: 200,
+                                                width: MediaQuery.textScalerOf(
+                                                        context)
+                                                    .scale(200)
+                                                    .clamp(200.0, 280.0),
                                                 child: TodoCard(todo: todo));
                                           })))
                           ],
@@ -686,123 +534,19 @@ class ScholarPage extends StatelessWidget {
         /*backgroundColor: CupertinoDynamicColor.resolve(
             CupertinoColors.systemGroupedBackground, context),*/
         child: CustomScrollView(
+      physics: const BouncingScrollPhysics(
+        parent: AlwaysScrollableScrollPhysics(),
+      ),
       slivers: [
         const CupertinoSliverNavigationBar(
           largeTitle: Text('学业'),
           border: null,
-          stretch: true,
         ),
-        SliverPinnedToBoxAdapter(
-            child: ColoredBox(
-          color: CupertinoDynamicColor.resolve(
-              CupertinoColors.systemBackground, context),
-          child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-              child: Column(children: [
-                Row(
-                  children: [
-                    Expanded(child: _buildSearchLauncher(context)),
-                    if (PlatformFeatures.isDesktop)
-                      ValueListenableBuilder(
-                          valueListenable: _isRefreshing,
-                          builder: (context, isRefreshing, child) =>
-                              CupertinoButton(
-                                onPressed: isRefreshing
-                                    ? null
-                                    : () async {
-                                        _isRefreshing.value = true;
-                                        late final List<String?> results;
-                                        try {
-                                          results = await _scholarController
-                                              .fetchData();
-                                        } finally {
-                                          _isRefreshing.value = false;
-                                        }
-                                        if (context.mounted &&
-                                            results.any(
-                                                (result) => result != null)) {
-                                          await showRefreshResultDialog(
-                                              context, results);
-                                        }
-                                      },
-                                child: isRefreshing
-                                    ? const CupertinoActivityIndicator()
-                                    : Icon(
-                                        CupertinoIcons.refresh,
-                                        color: CupertinoDynamicColor.resolve(
-                                            CupertinoColors.systemBlue,
-                                            context),
-                                        size: 20,
-                                      ),
-                              ))
-                  ],
-                ),
-                const SizedBox(height: 12),
-                _mouseDraggable(
-                  context,
-                  Obx(
-                    () => SemesterChips(
-                      names: [
-                        for (final semester in _scholarController.semesters)
-                          semester.name,
-                      ],
-                      selectedIndex: _scholarController.semesterIndex.value,
-                      onSelected: (index) {
-                        _scholarController.semesterIndex.value = index;
-                        _scholarController.semesterIndex.refresh();
-                      },
-                    ),
-                  ),
-                ),
-                // 桌面端刷新超过 5 秒后的状态条：小转圈 + 滚动文案，随刷新结束收起。
-                // 移动端的状态文案由下方 CupertinoSliverRefreshControl 的 builder 展示
-                if (PlatformFeatures.isDesktop)
-                  Obx(() {
-                    final message =
-                        _scholarController.refreshStatusMessage.value;
-                    return AnimatedSize(
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeInOut,
-                      alignment: Alignment.topCenter,
-                      // AnimatedSwitcher 让收起时末条文案先淡出、条带再合拢，
-                      // 而不是内容瞬间消失
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 200),
-                        child: message == null
-                            ? const SizedBox(
-                                key: ValueKey('refreshStatusStripEmpty'),
-                                width: double.infinity)
-                            : Padding(
-                                key: const ValueKey('refreshStatusStrip'),
-                                padding:
-                                    const EdgeInsets.only(top: 6, bottom: 2),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const CupertinoActivityIndicator(radius: 7),
-                                    const SizedBox(width: 6),
-                                    Flexible(
-                                        child: RollingShimmerText(message)),
-                                  ],
-                                ),
-                              ),
-                      ),
-                    );
-                  }),
-                const SizedBox(height: 4),
-                Divider(
-                  thickness: 0,
-                  color: CupertinoDynamicColor.resolve(
-                      CupertinoColors.separator, context),
-                  height: 14,
-                ),
-              ])),
-        )),
-        if (_scholarController.scholar.isLogan)
-          CupertinoSliverRefreshControl(
-            // 复刻原生转圈，刷新超过 5 秒后在其右侧滚动展示状态文案。
-            // Obx 是必需的：刷新驻留期间 sliver 高度不变、builder 不会被重调，
-            // 文案更新只能靠响应式重建
+        Obx(() {
+          if (!_scholarController.scholar.isLogan) {
+            return const SliverToBoxAdapter();
+          }
+          return CupertinoSliverRefreshControl(
             builder: (context, refreshState, pulledExtent,
                     refreshTriggerPullDistance, refreshIndicatorExtent) =>
                 Obx(() => RefreshStatusIndicator(
@@ -818,7 +562,99 @@ class ScholarPage extends StatelessWidget {
                 await showRefreshResultDialog(context, results);
               }
             },
-          ),
+          );
+        }),
+        SliverFloatingFilterPanel(
+          child: Column(children: [
+            Row(
+              children: [
+                const Expanded(child: CourseSearchLauncher()),
+                if (PlatformFeatures.isDesktop)
+                  ValueListenableBuilder(
+                      valueListenable: _isRefreshing,
+                      builder: (context, isRefreshing, child) =>
+                          CupertinoButton(
+                            onPressed: isRefreshing
+                                ? null
+                                : () async {
+                                    _isRefreshing.value = true;
+                                    late final List<String?> results;
+                                    try {
+                                      results =
+                                          await _scholarController.fetchData();
+                                    } finally {
+                                      _isRefreshing.value = false;
+                                    }
+                                    if (context.mounted &&
+                                        results
+                                            .any((result) => result != null)) {
+                                      await showRefreshResultDialog(
+                                          context, results);
+                                    }
+                                  },
+                            child: isRefreshing
+                                ? const CupertinoActivityIndicator()
+                                : Icon(
+                                    CupertinoIcons.refresh,
+                                    color: CupertinoDynamicColor.resolve(
+                                        CupertinoColors.systemBlue, context),
+                                    size: 20,
+                                  ),
+                          ))
+              ],
+            ),
+            Obx(() {
+              final semesters = _scholarController.semesters;
+              if (semesters.isEmpty) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: _mouseDraggable(
+                  context,
+                  SemesterChips(
+                    names: [for (final semester in semesters) semester.name],
+                    selectedIndex: _scholarController.semesterIndex.value,
+                    onSelected: (index) {
+                      _scholarController.semesterIndex.value = index;
+                      _scholarController.semesterIndex.refresh();
+                    },
+                  ),
+                ),
+              );
+            }),
+            // 桌面端刷新超过 5 秒后的状态条：小转圈 + 滚动文案，随刷新结束收起。
+            // 移动端的状态文案由下方 CupertinoSliverRefreshControl 的 builder 展示
+            if (PlatformFeatures.isDesktop)
+              Obx(() {
+                final message = _scholarController.refreshStatusMessage.value;
+                return AnimatedSize(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  alignment: Alignment.topCenter,
+                  // AnimatedSwitcher 让收起时末条文案先淡出、条带再合拢，
+                  // 而不是内容瞬间消失
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: message == null
+                        ? const SizedBox(
+                            key: ValueKey('refreshStatusStripEmpty'),
+                            width: double.infinity)
+                        : Padding(
+                            key: const ValueKey('refreshStatusStrip'),
+                            padding: const EdgeInsets.only(top: 6, bottom: 2),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const CupertinoActivityIndicator(radius: 7),
+                                const SizedBox(width: 6),
+                                Flexible(child: RollingShimmerText(message)),
+                              ],
+                            ),
+                          ),
+                  ),
+                );
+              }),
+          ]),
+        ),
         SliverToBoxAdapter(
           child: Obx(() {
             if (_scholarController.scholar.semesters.isNotEmpty) {
@@ -921,9 +757,4 @@ class ScholarPage extends StatelessWidget {
       ],
     ));
   }
-}
-
-class AlwaysDisabledFocusNode extends FocusNode {
-  @override
-  bool get hasFocus => false;
 }

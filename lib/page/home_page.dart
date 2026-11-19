@@ -60,6 +60,8 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildPage(BuildContext context, {required bool useGlass}) {
     final media = MediaQuery.of(context);
+    final glassTabFits =
+        useGlass && !media.disableAnimations && media.textScaler.scale(12) < 17;
     final showNavigation = media.viewInsets.bottom == 0;
     final railWidth = showNavigation &&
             useGlass &&
@@ -69,7 +71,7 @@ class _HomePageState extends State<HomePage> {
     final tabBar = showNavigation && railWidth == null
         ? buildHomeTabBar(
             context,
-            useGlass: useGlass,
+            useGlass: glassTabFits,
             selectedIndex: _indexNum,
             onSelected: _pageController.jumpToPage,
           )
@@ -109,7 +111,7 @@ class _HomePageState extends State<HomePage> {
     const railMargin = 12.0;
     if (tabBar != null) {
       final bottomPadding = tabBar.preferredSize.height + media.padding.bottom;
-      if (useGlass) {
+      if (glassTabFits) {
         scrollEnd = bottomPadding;
         newMediaQuery = newMediaQuery.removePadding(removeBottom: true);
       } else {
@@ -154,9 +156,8 @@ class _HomePageState extends State<HomePage> {
           if (tabBar != null)
             Align(
               alignment: Alignment.bottomCenter,
-              child: useGlass
-                  ? SafeArea(top: false, child: tabBar)
-                  : MediaQuery.withNoTextScaling(child: tabBar),
+              child:
+                  glassTabFits ? SafeArea(top: false, child: tabBar) : tabBar,
             ),
           if (railWidth != null)
             Align(

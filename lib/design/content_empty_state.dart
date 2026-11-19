@@ -1,15 +1,21 @@
 import 'package:flutter/cupertino.dart';
 
 class ContentEmptyState extends StatelessWidget {
-  const ContentEmptyState({super.key, required this.icon, required this.title});
+  const ContentEmptyState({
+    super.key,
+    required this.icon,
+    required this.title,
+    this.verticalPadding = 72,
+  });
 
   final IconData icon;
   final String title;
+  final double verticalPadding;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 72),
+      padding: EdgeInsets.symmetric(horizontal: 24, vertical: verticalPadding),
       child: Column(
         spacing: 12,
         children: [

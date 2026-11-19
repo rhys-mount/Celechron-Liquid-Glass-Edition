@@ -1,3 +1,4 @@
+import 'package:celechron/design/action_dialogs.dart';
 import 'package:celechron/design/content_empty_state.dart';
 import 'package:celechron/design/card_detail_line.dart';
 import 'package:celechron/design/custom_decoration.dart';
@@ -31,7 +32,7 @@ class TaskPage extends StatelessWidget {
   }
 
   Future<void> showCardDialog(BuildContext context, Task deadline) async {
-    return showDialog<void>(
+    return showCupertinoDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return CupertinoAlertDialog(
@@ -119,13 +120,8 @@ class TaskPage extends StatelessWidget {
               CupertinoDialogAction(
                 onPressed: () async {
                   Navigator.of(context).pop();
-                  Task res = await showCupertinoModalPopup(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return TaskEditPage(deadline);
-                        },
-                      ) ??
-                      deadline;
+                  final res = await TaskEditPage.open(context, deadline);
+                  if (res == null) return;
                   bool needUpdate = deadline.differentForFlow(res);
                   deadline.copy(res);
                   _taskController.updateDeadlineList();
@@ -140,6 +136,7 @@ class TaskPage extends StatelessWidget {
               ),
             if (deadline.type == TaskType.fixedlegacy)
               CupertinoDialogAction(
+                isDestructiveAction: true,
                 onPressed: () async {
                   Navigator.of(context).pop();
                   deadline.status = TaskStatus.deleted;
@@ -154,6 +151,30 @@ class TaskPage extends StatelessWidget {
     );
   }
 
+  Future<void> _confirmBulkDelete(
+      BuildContext context, TaskStatus status) async {
+    final statusLabel = status == TaskStatus.completed ? '已完成' : '已过期';
+    final count = _taskController.taskList
+        .where(
+            (task) => task.type == TaskType.deadline && task.status == status)
+        .length;
+    if (count == 0) return;
+    final confirmed = await confirmDestructiveAction(
+      context,
+      title: '删除$statusLabel任务？',
+      message: '将删除 $count 个$statusLabel任务。',
+      action: '删除',
+    );
+    if (!confirmed || !context.mounted) return;
+    if (status == TaskStatus.completed) {
+      _taskController.removeCompletedDeadline(context);
+    } else {
+      _taskController.removeFailedDeadline(context);
+    }
+    _taskController.updateDeadlineList();
+    _taskController.taskList.refresh();
+  }
+
   Future<void> newDeadline(context) async {
     DateTime time = DateTime.now();
     Task? deadline = Task(
@@ -165,7 +186,7 @@ class TaskPage extends StatelessWidget {
     Task? res = await showCupertinoModalPopup(
       context: context,
       builder: (BuildContext context) {
-        return TaskEditPage(deadline);
+        return TaskEditPage(deadline, isNew: true);
       },
     );
     if (res != null && res.status != TaskStatus.deleted) {
@@ -208,8 +229,12 @@ class TaskPage extends StatelessWidget {
           direction: deadline.type == TaskType.deadline
               ? DismissDirection.horizontal
               : DismissDirection.endToStart,
-          movementDuration: const Duration(milliseconds: 300),
-          resizeDuration: const Duration(milliseconds: 300),
+          movementDuration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 300),
+          resizeDuration: MediaQuery.disableAnimationsOf(context)
+              ? null
+              : const Duration(milliseconds: 300),
           dismissThresholds: const {
             DismissDirection.startToEnd: 0.25,
             DismissDirection.endToStart: 0.25,
@@ -241,7 +266,7 @@ class TaskPage extends StatelessWidget {
                     ),
                   ),
                 )
-              : null,
+              : const SizedBox.shrink(),
           secondaryBackground: Container(
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.only(right: 16),
@@ -302,12 +327,7 @@ class TaskPage extends StatelessWidget {
           },
           child: RoundRectangleCard.content(
             onTap: () async {
-              // 直接导航到编辑页面
-              Task? res = await Navigator.of(context, rootNavigator: true).push(
-                CupertinoPageRoute(
-                  builder: (context) => TaskEditPage(deadline),
-                ),
-              );
+              final res = await TaskEditPage.open(context, deadline);
               if (res == null) return;
               if (res.status == TaskStatus.deleted) {
                 // 编辑页的“删除任务”会把状态置为 deleted 后返回
@@ -339,22 +359,23 @@ class TaskPage extends StatelessWidget {
   ) {
     final deadline = task.type == TaskType.deadline;
     final now = DateTime.now();
+    final dark = CupertinoTheme.brightnessOf(context) == Brightness.dark;
     final statusColor = switch (task.status) {
-      TaskStatus.completed => CupertinoColors.systemGreen,
-      TaskStatus.failed => CupertinoColors.systemRed,
-      TaskStatus.suspended => CupertinoColors.systemOrange,
-      _ => CupertinoColors.secondaryLabel,
-    }
-        .resolveFrom(context);
+      TaskStatus.completed =>
+        dark ? const Color(0xFF83D99B) : const Color(0xFF27663A),
+      TaskStatus.failed =>
+        dark ? const Color(0xFFFFB4B0) : const Color(0xFF9B241F),
+      TaskStatus.suspended =>
+        dark ? const Color(0xFFFFC77A) : const Color(0xFF87500C),
+      _ => CupertinoColors.label.resolveFrom(context).withValues(alpha: 0.72),
+    };
     final startLabel =
         TimeHelper.compactDateTime(task.startTime, relativeTo: now);
     final endLabel = TimeHelper.compactDateTime(task.endTime, relativeTo: now);
     final sameDay =
         dateOnly(task.startTime.toLocal()) == dateOnly(task.endTime.toLocal());
     final endTime = sameDay ? endLabel.split(' ').last : endLabel;
-    final time = deadline
-        ? '截止 $endLabel${task.endTime.isBefore(now) ? ' · 已过期' : ''}'
-        : '$startLabel – $endTime';
+    final time = deadline ? '截止 $endLabel' : '$startLabel – $endTime';
     Widget statusChip(String status) => DecoratedBox(
           decoration: BoxDecoration(
             color: CupertinoColors.tertiarySystemFill.resolveFrom(context),
@@ -459,8 +480,6 @@ class TaskPage extends StatelessWidget {
                     label: '添加任务',
                     onPressed: () async {
                       await newDeadline(context);
-                      _taskController.updateDeadlineList();
-                      _taskController.taskList.refresh();
                     },
                   ),
                   (
@@ -469,26 +488,26 @@ class TaskPage extends StatelessWidget {
                     onPressed: () async {
                       await showCupertinoModalPopup(
                         context: context,
-                        builder: (BuildContext context) => CupertinoActionSheet(
+                        builder: (BuildContext sheetContext) =>
+                            CupertinoActionSheet(
+                          title: const Text('任务操作'),
                           actions: <Widget>[
                             CupertinoActionSheetAction(
-                              child: const Text('删除已完成任务'),
-                              onPressed: () async {
-                                _taskController
-                                    .removeCompletedDeadline(context);
-                                _taskController.updateDeadlineList();
-                                _taskController.taskList.refresh();
-                                Navigator.of(context).pop();
+                              isDestructiveAction: true,
+                              onPressed: () {
+                                Navigator.of(sheetContext).pop();
+                                _confirmBulkDelete(
+                                    context, TaskStatus.completed);
                               },
+                              child: const Text('删除已完成任务'),
                             ),
                             CupertinoActionSheetAction(
-                              child: const Text('删除已过期任务'),
-                              onPressed: () async {
-                                _taskController.removeFailedDeadline(context);
-                                _taskController.updateDeadlineList();
-                                _taskController.taskList.refresh();
-                                Navigator.of(context).pop();
+                              isDestructiveAction: true,
+                              onPressed: () {
+                                Navigator.of(sheetContext).pop();
+                                _confirmBulkDelete(context, TaskStatus.failed);
                               },
+                              child: const Text('删除已过期任务'),
                             ),
                             CupertinoActionSheetAction(
                               child: const Text('暂停所有任务'),
@@ -500,7 +519,7 @@ class TaskPage extends StatelessWidget {
                                   _taskController.updateDeadlineListTime();
                                   _taskController.taskList.refresh();
                                 }
-                                Navigator.of(context).pop();
+                                Navigator.of(sheetContext).pop();
                               },
                             ),
                             CupertinoActionSheetAction(
@@ -513,14 +532,14 @@ class TaskPage extends StatelessWidget {
                                   _taskController.updateDeadlineListTime();
                                   _taskController.taskList.refresh();
                                 }
-                                Navigator.of(context).pop();
+                                Navigator.of(sheetContext).pop();
                               },
                             ),
                           ],
                           cancelButton: CupertinoActionSheetAction(
                             isDefaultAction: true,
                             onPressed: () {
-                              Navigator.of(context).pop();
+                              Navigator.of(sheetContext).pop();
                             },
                             child: const Text('取消'),
                           ),

@@ -126,15 +126,33 @@ struct ECardWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: ECardWidgetProvider()) { entry in
             ECardWidgetView(entry: entry)
-                .widgetBackground(Color(UIColor.tertiarySystemFill))
         }.supportedFamilies([.systemSmall])
     }
 }
 
 struct ECardWidgetView: View {
     let entry: ECardWidgetProvider.Entry
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var isDark: Bool {
+        #if DEBUG
+        let suite = "group.top.celechron.celechron.debug"
+        #else
+        let suite = "group.top.celechron.celechron"
+        #endif
+        switch UserDefaults(suiteName: suite)?.string(forKey: "ecardWidgetBrightness") ?? "system" {
+        case "light": return false
+        case "dark": return true
+        default: return colorScheme == .dark
+        }
+    }
     
     var body: some View {
+        let dark = isDark
+        let accent = dark
+            ? Color(red: 10 / 255.0, green: 132 / 255.0, blue: 1)
+            : Color(red: 0, green: 63 / 255.0, blue: 136 / 255.0)
+        let darkSurface = Color(red: 28 / 255.0, green: 28 / 255.0, blue: 30 / 255.0)
         let balanceString = entry.balance > 0 ? 
                                 entry.balance < 10000 ?
         String(format: "%d.%d%d元", arguments: [entry.balance / 100, entry.balance % 100 / 10, entry.balance % 10])
@@ -142,38 +160,32 @@ struct ECardWidgetView: View {
                             : "待刷新"
         VStack(alignment: .leading) {
             HStack {
-                Image(systemName: "creditcard")
+                Image(systemName: "creditcard").foregroundColor(accent)
                 Spacer().frame(width: 4)
                 Text("校园卡余额")
                     .font(.footnote).bold()
+                    .foregroundColor(dark ? .white : darkSurface)
             }
             
             Spacer().frame(height: 8)
             
-            if #available(iOSApplicationExtension 16.1, *) {
-                Text(balanceString).font(.title).bold()
-                    .fontDesign(.rounded)
-            } else {
-                Text(balanceString).font(.title.bold())
+            HStack(spacing: 6) {
+                Group {
+                    if #available(iOSApplicationExtension 16.1, *) {
+                        Text(balanceString).font(.title).bold().fontDesign(.rounded)
+                    } else {
+                        Text(balanceString).font(.title.bold())
+                    }
+                }
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+                Spacer(minLength: 0)
+                Image(systemName: "qrcode").font(.title2)
             }
-            
-            Spacer().frame(height: 16)
-            
-            
-            HStack(alignment:.top) {
-                Text("更新时间: " + entry.date.HHmm()).font(.caption2).foregroundColor(.secondary)
-                Spacer()
-                Image(systemName: "qrcode").foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/).font(/*@START_MENU_TOKEN@*/.title/*@END_MENU_TOKEN@*/)
-            }
-        }.widgetURL(URL(string: "celechron://ecardpaypage"))
-    }
-}
-
-extension Date {
-    func HHmm(withFormat format: String = "HH:mm") -> String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = format
-        return dateFormatter.string(from: self)
+            .foregroundColor(accent)
+        }
+        .widgetBackground(dark ? darkSurface : Color.white)
+        .widgetURL(URL(string: "celechron://ecardpaypage"))
     }
 }
 

@@ -19,6 +19,7 @@ import androidx.glance.text.FontFamily
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
+import androidx.glance.unit.ColorProvider
 import com.it_nomads.fluttersecurestorage.FlutterSecureStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,14 +28,33 @@ import kotlinx.coroutines.*
 import kotlinx.serialization.json.*
 import java.net.HttpURLConnection
 import java.net.URL
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 
 class ECardWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = ECardWidget()
 }
 
 class ECardWidget : GlanceAppWidget() {
+    companion object {
+        private const val APPEARANCE_PREFS = "ecard_widget_appearance"
+        private const val BRIGHTNESS = "brightness"
+
+        private fun appearancePrefs(context: Context) =
+            context.getSharedPreferences(APPEARANCE_PREFS, Context.MODE_PRIVATE)
+
+        internal fun setBrightness(context: Context, mode: String): Boolean {
+            val prefs = appearancePrefs(context)
+            if (prefs.getString(BRIGHTNESS, null) == mode) return false
+            prefs.edit().putString(BRIGHTNESS, mode).apply()
+            return true
+        }
+    }
+
+    private fun widgetColor(mode: String, system: Int, light: Int, dark: Int) =
+        ColorProvider(when (mode) {
+            "light" -> light
+            "dark" -> dark
+            else -> system
+        })
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
 
@@ -47,17 +67,25 @@ class ECardWidget : GlanceAppWidget() {
             balance = -1
         }
 
+        val mode = appearancePrefs(context).getString(BRIGHTNESS, "system") ?: "system"
         provideContent {
             GlanceTheme {
-                content(context, id, balance)
+                content(context, id, balance, mode)
             }
         }
     }
 
     @Composable
-    private fun content(context: Context?, id: GlanceId?, balance: Int) {
+    private fun content(context: Context?, id: GlanceId?, balance: Int, mode: String) {
+        // Match the app's Cupertino theme, including an explicit light/dark override.
+        val accent = widgetColor(mode, R.color.ecard_widget_accent,
+            R.color.ecard_widget_accent_light, R.color.ecard_widget_accent_dark)
+        val background = widgetColor(mode, R.color.ecard_widget_background,
+            R.color.ecard_widget_surface_light, R.color.ecard_widget_surface_dark)
+        val foreground = widgetColor(mode, R.color.ecard_widget_foreground,
+            R.color.ecard_widget_surface_dark, R.color.ecard_widget_surface_light)
         Column(
-            modifier = GlanceModifier.background(GlanceTheme.colors.background).fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp).cornerRadius(16.dp).clickable{
+            modifier = GlanceModifier.background(background).fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp).cornerRadius(16.dp).clickable{
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse("celechron://ecardpaypage"))
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context?.startActivity(intent)
@@ -69,14 +97,14 @@ class ECardWidget : GlanceAppWidget() {
                     provider = ImageProvider(
                         resId = R.drawable.credit_card_24px
                     ),
-                    contentDescription = "Credit Card Icon",
+                    contentDescription = null,
                     modifier = GlanceModifier.size(20.dp),
-                    colorFilter = ColorFilter.tint(GlanceTheme.colors.onBackground)
+                    colorFilter = ColorFilter.tint(accent)
                 )
                 Spacer(modifier = GlanceModifier.width(4.dp))
                 Text(
                     text = "校园卡余额", maxLines = 1, style = TextStyle(
-                        color = GlanceTheme.colors.onBackground,
+                        color = foreground,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -86,48 +114,36 @@ class ECardWidget : GlanceAppWidget() {
                     provider = ImageProvider(
                         resId = R.drawable.sync_24px
                     ),
-                    contentDescription = "Sync Icon",
+                    contentDescription = "刷新余额",
                     modifier = GlanceModifier.size(20.dp).clickable {
                         CoroutineScope(Dispatchers.Main).launch {
                             update(context!!, id!!)
                         }
                     },
-                    colorFilter = ColorFilter.tint(GlanceTheme.colors.onBackground)
+                    colorFilter = ColorFilter.tint(accent)
                 )
             }
 
-            Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
-                Column {
-                    Text(
-                        text = formatBalance(balance),
-                        maxLines = 1,
-                        style = TextStyle(
-                            color = GlanceTheme.colors.primary,
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.SansSerif
-                        )
+            Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = formatBalance(balance),
+                    maxLines = 1,
+                    style = TextStyle(
+                        color = accent,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.SansSerif
                     )
-                    Text(
-                        text = "更新时间：${LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))}",
-                        maxLines = 1,
-                        style = TextStyle(
-                            color = GlanceTheme.colors.onBackground,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    )
-
-                }
+                )
                 Spacer(modifier = GlanceModifier.defaultWeight())
                 Column(horizontalAlignment = Alignment.End) {
                     Image(
                         provider = ImageProvider(
                             resId = R.drawable.qr_code_24px
                         ),
-                        contentDescription = "QR Code Icon",
+                        contentDescription = "打开付款码",
                         modifier = GlanceModifier.size(32.dp),
-                        colorFilter = ColorFilter.tint(GlanceTheme.colors.primary)
+                        colorFilter = ColorFilter.tint(accent)
                     )
                 }
             }
@@ -140,7 +156,7 @@ class ECardWidget : GlanceAppWidget() {
     @Preview(widthDp = 180, heightDp = 102)
     @Composable
     fun preview() {
-        content(null, null, 1897)
+        content(null, null, 1897, "system")
     }
 
     private fun formatBalance(balance: Int): String {

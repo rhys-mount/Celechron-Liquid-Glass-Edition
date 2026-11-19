@@ -206,6 +206,7 @@ class _CelechronAppState extends State<CelechronApp>
     var dispatcher = SchedulerBinding.instance.platformDispatcher;
 
     ever(brightnessMode, (mode) {
+      unawaited(ECardWidgetMessenger.setAppearance(mode));
       if (mode == BrightnessMode.system) {
         SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
           statusBarIconBrightness:

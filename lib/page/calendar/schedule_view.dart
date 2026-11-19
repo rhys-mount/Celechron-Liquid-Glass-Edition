@@ -8,6 +8,8 @@ import 'package:celechron/page/calendar/calendar_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:celechron/design/liquid_glass/home_scroll_insets.dart';
 import 'package:get/get.dart';
+import 'package:celechron/design/content_empty_state.dart';
+import 'package:celechron/page/scholar/course_schedule/session_list.dart';
 
 class ScheduleView extends StatelessWidget {
   final CalendarController controller;
@@ -320,7 +322,23 @@ class ScheduleView extends StatelessWidget {
           16,
           16 + HomeScrollInsets.bottomOf(context),
         ),
-        child: _courseSchedule(context),
+        child: Obx(() {
+          final semester = controller.getCurrentSemester();
+          if (semester == null) {
+            return const ContentEmptyState(
+              icon: CupertinoIcons.calendar,
+              title: '当前不在学期内，可返回月历查看日程',
+            );
+          }
+          if (ScheduleSessionList.prefersList(context)) {
+            return ScheduleSessionList(
+              days: controller.isFirstHalfSemester(semester)
+                  ? semester.firstHalfTimetable
+                  : semester.secondHalfTimetable,
+            );
+          }
+          return _courseSchedule(context);
+        }),
       ),
     );
   }

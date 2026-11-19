@@ -13,13 +13,18 @@ class GradeDetailController extends GetxController {
   final _db = Get.find<DatabaseHelper>(tag: 'db');
   final RxMap<String, bool> customGpaSelected = RxMap();
   late RxList<Semester> semestersWithGrades;
+  late final Worker _semesterWorker;
+
+  int get selectedIndex {
+    final index = semesterIndex.value;
+    return index >= 0 && index < semestersWithGrades.length ? index : 0;
+  }
 
   void init() {
     semestersWithGrades = scholar.value.semesters
         .where((element) => element.grades.isNotEmpty)
         .toList()
         .obs;
-    ever(scholar, (callback) => refreshSemesters());
     customGpaSelected.value = _db.getCustomGpa();
     semesterIndex.value = 0;
     customGpaMode.value = false;
@@ -28,14 +33,26 @@ class GradeDetailController extends GetxController {
   @override
   void onInit() {
     init();
+    _semesterWorker = ever(scholar, (_) => refreshSemesters());
     super.onInit();
   }
 
   void refreshSemesters() {
-    semestersWithGrades.value = scholar.value.semesters
+    final name = semestersWithGrades.isEmpty
+        ? null
+        : semestersWithGrades[selectedIndex].name;
+    final semesters = scholar.value.semesters
         .where((element) => element.grades.isNotEmpty)
         .toList();
-    semestersWithGrades.refresh();
+    final index = semesters.indexWhere((semester) => semester.name == name);
+    semestersWithGrades.value = semesters;
+    semesterIndex.value = index < 0 ? 0 : index;
+  }
+
+  @override
+  void onClose() {
+    _semesterWorker.dispose();
+    super.onClose();
   }
 
   void refreshCustomGpa() {

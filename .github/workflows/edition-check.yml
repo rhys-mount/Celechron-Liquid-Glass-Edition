@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [liquid-glass]
   push:
-    branches: [liquid-glass, 'feat/**']
+    branches: [liquid-glass, 'feat/**', 'codex/**']
   workflow_dispatch:
 
 permissions:

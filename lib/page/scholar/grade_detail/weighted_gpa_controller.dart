@@ -44,6 +44,8 @@ class WeightedGpaController extends GetxController {
   final RxMap<String, double> weightedMap = RxMap<String, double>();
   final semesterIndex = 0.obs;
   final showAllSemesters = false.obs;
+  // Independent of ordinary custom GPA and of persisted course multipliers.
+  final _excludedGradeIds = <String>{}.obs;
   late RxList<Semester> semestersWithGrades;
 
   @override
@@ -106,6 +108,24 @@ class WeightedGpaController extends GetxController {
     return scholar.value.grades.values.expand((g) => g).toList();
   }
 
+  bool includesGrade(String id) => !_excludedGradeIds.contains(id);
+
+  void setGradeIncluded(String id, bool included) {
+    if (included) {
+      _excludedGradeIds.remove(id);
+    } else {
+      _excludedGradeIds.add(id);
+    }
+  }
+
+  void selectAllGrades() => _excludedGradeIds.clear();
+
+  void clearGradeSelection() => _excludedGradeIds.addAll(
+        getAllGrades()
+            .where((grade) => grade.gpaIncluded)
+            .map((grade) => grade.id),
+      );
+
   /// 获取当前筛选范围的成绩列表
   ///
   /// 返回值：
@@ -138,7 +158,7 @@ class WeightedGpaController extends GetxController {
   ///
   /// 说明：
   /// - 根据showAllSemesters和semesterIndex决定计算范围
-  /// - 如果showAllSemesters为true，计算所有课程
+  /// - 如果showAllSemesters为true，仅计算已勾选且计入绩点的课程
   /// - 如果showAllSemesters为false，计算当前学期的课程
   ///
   /// 返回值：
@@ -146,7 +166,10 @@ class WeightedGpaController extends GetxController {
   ///   - item1: [五分制, 四分制(4.3分制), 原始四分制, 百分制]
   ///   - item2: 总学分
   Tuple<List<double>, double> calculateCurrentSemesterWeightedGpa() {
-    final grades = getCurrentSemesterGrades();
+    final scope = getCurrentSemesterGrades();
+    final grades = showAllSemesters.value
+        ? scope.where((grade) => grade.gpaIncluded && includesGrade(grade.id))
+        : scope;
     return GpaHelper.calculateWeightedGpa(grades, weightedMap);
   }
 }

@@ -1,14 +1,15 @@
 import 'dart:math';
 
-import 'package:celechron/design/custom_colors.dart';
 import 'package:celechron/utils/tuple.dart';
 import 'package:celechron/model/session.dart';
 import 'package:celechron/design/persistent_headers.dart';
 import 'course_schedule_controller.dart';
 import 'package:get/get.dart';
-import 'package:celechron/design/animate_button.dart';
+import 'package:celechron/design/semester_chips.dart';
+import 'package:celechron/design/floating_filter_panel.dart';
+import 'package:celechron/design/content_empty_state.dart';
+import 'course_hours_cards.dart';
 import 'package:celechron/design/round_rectangle_card.dart';
-import 'package:celechron/design/two_line_card.dart';
 import 'course_card.dart';
 import 'package:flutter/cupertino.dart';
 
@@ -31,105 +32,26 @@ class CourseSchedulePage extends StatelessWidget {
     ));
   }
 
-  Widget _semesterPicker(BuildContext context) {
+  Widget _courseHours() {
+    final controller = _courseScheduleController;
     return RoundRectangleCard(
       animate: false,
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 30,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _courseScheduleController.semesters.length,
-                    itemBuilder: (context, index) {
-                      final semester =
-                          _courseScheduleController.semesters[index];
-                      return Obx(
-                        () => Stack(
-                          children: [
-                            AnimateButton(
-                              text:
-                                  '${semester.name.substring(2, 5)}${semester.name.substring(7, 11)}',
-                              onTap: () {
-                                _courseScheduleController.semesterIndex.value =
-                                    index;
-                                _courseScheduleController.semesterIndex
-                                    .refresh();
-                              },
-                              backgroundColor: _courseScheduleController
-                                          .semesterIndex.value ==
-                                      index
-                                  ? CustomCupertinoDynamicColors.cyan
-                                  : CupertinoColors.systemFill,
-                            ),
-                            const SizedBox(width: 90),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Obx(
-            () => Hero(
-              tag: 'courseSchedule',
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TwoLineCard(
-                        animate: true,
-                        onTap: () {
-                          _courseScheduleController
-                              .firstOrSecondSemester.value = true;
-                        },
-                        title:
-                            '${_courseScheduleController.semester.firstHalfName}学期课时',
-                        content:
-                            '${_courseScheduleController.semester.firstHalfSessionCount}节/两周',
-                        backgroundColor: _courseScheduleController
-                                .firstOrSecondSemester.value
-                            ? _courseScheduleController.semester.name[9] == '春'
-                                ? CustomCupertinoDynamicColors.spring
-                                : CustomCupertinoDynamicColors.autumn
-                            : CupertinoColors.systemFill,
-                        withColoredFont: true),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TwoLineCard(
-                        animate: true,
-                        onTap: () {
-                          _courseScheduleController
-                              .firstOrSecondSemester.value = false;
-                        },
-                        title:
-                            '${_courseScheduleController.semester.secondHalfName}学期课时',
-                        content:
-                            '${_courseScheduleController.semester.secondHalfSessionCount}节/两周',
-                        backgroundColor: _courseScheduleController
-                                .firstOrSecondSemester.value
-                            ? CupertinoColors.systemFill
-                            : _courseScheduleController.semester.name[9] == '春'
-                                ? CustomCupertinoDynamicColors.summer
-                                : CustomCupertinoDynamicColors.winter,
-                        withColoredFont: true),
-                  ),
-                ],
-              ),
+      child: Obx(() => Hero(
+            tag: 'courseSchedule',
+            child: CourseHoursCards(
+              semester: controller.semester,
+              selectedFirstHalf: controller.firstOrSecondSemester.value,
+              onSelect: (first) =>
+                  controller.firstOrSecondSemester.value = first,
             ),
-          ),
-        ],
-      ),
+          )),
     );
   }
 
   Widget _courseSchedule(BuildContext context) {
+    final textScaler = MediaQuery.textScalerOf(context);
+    final timeLabelHeight =
+        (textScaler.scale(10) + textScaler.scale(14)) * 1.4 + 2;
     const List<String> courseStartTime = [
       "08:00",
       "08:50",
@@ -239,7 +161,7 @@ class CourseSchedulePage extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           SizedBox(
-            height: 560,
+            height: max(560.0, timeLabelHeight * 13),
             child: Obx(
               () {
                 var sessionsByDayOfWeek =
@@ -441,6 +363,7 @@ class CourseSchedulePage extends StatelessWidget {
             child: Obx(
               () => SessionCard(
                 sessionList: sessionList[i],
+                compact: true,
                 hideInfomation:
                     _courseScheduleController.hideCourseInfomation.value,
               ),
@@ -473,47 +396,55 @@ class CourseSchedulePage extends StatelessWidget {
       child: CustomScrollView(
         slivers: [
           const CelechronSliverTextHeader(subtitle: '课表'),
+          SliverFloatingFilterPanel(
+            child: Obx(() => SemesterChips(
+                  names: [
+                    for (final semester in _courseScheduleController.semesters)
+                      semester.name
+                  ],
+                  selectedIndex: _courseScheduleController.selectedIndex,
+                  onSelected: (index) =>
+                      _courseScheduleController.semesterIndex.value = index,
+                )),
+          ),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                children: [
-                  _semesterPicker(context),
-                  const SizedBox(height: 8),
-                  // Container(
-                  //   padding: const EdgeInsets.only(left: 16, right: 16),
-                  //   child: Text(
-                  //     '请前往教务网查看冲突选课课表',
-                  //     style: TextStyle(
-                  //         color: CupertinoDynamicColor.resolve(
-                  //             CupertinoColors.secondaryLabel, context),
-                  //         fontSize: 14),
-                  //   ),
-                  // ),
-                  // const SizedBox(height: 8),
-                  _courseSchedule(context),
-                  const SizedBox(height: 20),
-                  Obx(
-                    () => CupertinoListSection.insetGrouped(
-                      margin: const EdgeInsetsDirectional.fromSTEB(
-                          0.0, 0.0, 0.0, 10.0),
-                      additionalDividerMargin: 2,
-                      children: <CupertinoListTile>[
-                        CupertinoListTile(
-                            title: const Text('隐藏课程信息'),
-                            trailing: CupertinoSwitch(
-                              value: _courseScheduleController
-                                  .hideCourseInfomation.value,
-                              onChanged: (value) async {
-                                _courseScheduleController
-                                    .hideCourseInfomation.value = value;
-                              },
-                            )),
-                      ],
+              child: Obx(() {
+                if (_courseScheduleController.semesters.isEmpty) {
+                  return const ContentEmptyState(
+                    icon: CupertinoIcons.calendar,
+                    title: '暂无课表。请返回学业页下拉刷新。',
+                  );
+                }
+                return Column(
+                  children: [
+                    _courseHours(),
+                    const SizedBox(height: 8),
+                    _courseSchedule(context),
+                    const SizedBox(height: 20),
+                    Obx(
+                      () => CupertinoListSection.insetGrouped(
+                        margin: const EdgeInsetsDirectional.fromSTEB(
+                            0.0, 0.0, 0.0, 10.0),
+                        additionalDividerMargin: 2,
+                        children: <CupertinoListTile>[
+                          CupertinoListTile(
+                              title: const Text('隐藏课程信息'),
+                              trailing: CupertinoSwitch(
+                                value: _courseScheduleController
+                                    .hideCourseInfomation.value,
+                                onChanged: (value) async {
+                                  _courseScheduleController
+                                      .hideCourseInfomation.value = value;
+                                },
+                              )),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                );
+              }),
             ),
           ),
         ],

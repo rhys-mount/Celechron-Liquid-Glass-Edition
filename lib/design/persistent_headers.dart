@@ -7,10 +7,12 @@ class CelechronSliverTextHeader extends StatelessWidget {
     super.key,
     required this.subtitle,
     this.right,
+    this.transitionBetweenRoutes = true,
   });
 
   final String subtitle;
   final Widget? right;
+  final bool transitionBetweenRoutes;
 
   @override
   Widget build(BuildContext context) {
@@ -21,6 +23,7 @@ class CelechronSliverTextHeader extends StatelessWidget {
       alwaysShowMiddle: false,
       border: null,
       stretch: true,
+      transitionBetweenRoutes: transitionBetweenRoutes,
       leading: ModalRoute.of(context)?.canPop == true
           ? NavigationAction(
               icon: CupertinoIcons.back,

@@ -74,6 +74,27 @@ private class FlowMessengerImplementation: FlowMessenger {
         }
         ecardWidgetChannel.setMethodCallHandler({
           (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
+            if call.method == "setAppearance" {
+                guard let mode = call.arguments as? String,
+                      ["system", "light", "dark"].contains(mode) else {
+                    result(FlutterError(code: "invalid_appearance", message: "Unknown widget appearance", details: nil))
+                    return
+                }
+                #if DEBUG
+                let suite = "group.top.celechron.celechron.debug"
+                #else
+                let suite = "group.top.celechron.celechron"
+                #endif
+                if let defaults = UserDefaults(suiteName: suite),
+                   defaults.string(forKey: "ecardWidgetBrightness") != mode {
+                    defaults.set(mode, forKey: "ecardWidgetBrightness")
+                    if #available(iOS 14.0, *) {
+                        WidgetCenter.shared.reloadTimelines(ofKind: "ECardWidget")
+                    }
+                }
+                result(nil)
+                return
+            }
             guard call.method == "update" || call.method == "logout" else {
                 result(FlutterMethodNotImplemented)
                 return

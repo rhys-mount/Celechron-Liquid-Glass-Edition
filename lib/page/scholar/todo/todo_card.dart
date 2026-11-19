@@ -1,3 +1,4 @@
+import 'package:celechron/design/card_detail_line.dart';
 import 'package:celechron/model/todo.dart';
 import 'package:celechron/utils/utils.dart';
 import 'package:flutter/cupertino.dart';
@@ -9,70 +10,41 @@ class TodoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var brightness = CupertinoTheme.of(context).brightness ??
-        MediaQuery.of(context).platformBrightness;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    final foreground = CupertinoColors.label.resolveFrom(context);
+    return DecoratedBox(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        color: brightness == Brightness.dark
-            ? CupertinoColors.secondarySystemFill
-            : CupertinoColors.systemGroupedBackground,
-        // boxShadow
-        boxShadow: const [
-          BoxShadow(
-            color: Color.fromRGBO(0, 0, 0, 0.05),
-            offset: Offset(0, 2),
-            blurRadius: 4,
-          ),
-        ],
+        borderRadius: BorderRadius.circular(12),
+        color: CupertinoColors.tertiarySystemFill.resolveFrom(context),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        // add a colored edge
-        children: [
-          Text(
-            todo.course,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            strutStyle: const StrutStyle(leading: 0.5, forceStrutHeight: true),
-            style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
-                  color: CupertinoTheme.of(context)
-                      .textTheme
-                      .textStyle
-                      .color!
-                      .withValues(alpha: 0.5),
-                  fontSize: 14,
-                  fontWeight: FontWeight.normal,
-                ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            todo.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            strutStyle: const StrutStyle(leading: 0.5, forceStrutHeight: true),
-            style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: brightness == Brightness.dark
-                      ? CupertinoColors.systemBackground
-                      : CupertinoTheme.of(context).textTheme.textStyle.color,
-                ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            todo.endTime != null ? toStringHumanReadable(todo.endTime!) : "无",
-            style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: brightness == Brightness.dark
-                      ? CupertinoColors.systemBackground
-                      : CupertinoTheme.of(context).textTheme.textStyle.color,
-                ),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 5,
+          children: [
+            Text(
+              todo.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                  color: foreground, fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            CardDetailLine(
+              CupertinoIcons.clock,
+              todo.endTime == null
+                  ? '无截止时间'
+                  : toStringHumanReadable(todo.endTime!),
+              emphasis: true,
+            ),
+            Text(
+              todo.course,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                  color: foreground.withValues(alpha: 0.68), fontSize: 13),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -11,16 +11,57 @@ import 'package:get/get.dart';
 
 class CourseDetailPage extends StatelessWidget {
   final _scholar = Get.find<Rx<Scholar>>(tag: 'scholar');
-  late final Course course;
+  final String? courseId;
 
-  CourseDetailPage({required courseId, super.key}) {
-    course = _scholar.value.semesters
-        .firstWhere((e) => e.courses.containsKey(courseId))
-        .courses[courseId]!;
+  static Future<void> open(BuildContext context, String? courseId) {
+    Widget detail(BuildContext context) => CourseDetailPage(courseId: courseId);
+    final route = MediaQuery.disableAnimationsOf(context)
+        ? PageRouteBuilder<void>(
+            transitionDuration: Duration.zero,
+            reverseTransitionDuration: Duration.zero,
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                detail(context),
+          )
+        : CupertinoPageRoute<void>(builder: detail);
+    return Navigator.of(context, rootNavigator: true).push<void>(route);
   }
 
+  CourseDetailPage({required this.courseId, super.key});
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => Obx(() {
+        final course = _scholar.value.semesters
+            .map((semester) => semester.courses[courseId])
+            .whereType<Course>()
+            .firstOrNull;
+        return _buildDetail(context, course);
+      });
+
+  Widget _buildDetail(BuildContext context, Course? course) {
+    if (course == null) {
+      return CupertinoPageScaffold(
+        backgroundColor:
+            CupertinoColors.systemGroupedBackground.resolveFrom(context),
+        child: CustomScrollView(
+          slivers: const [
+            CelechronSliverTextHeader(
+              subtitle: '课程详情',
+              transitionBetweenRoutes: false,
+            ),
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child:
+                      Text('暂未同步到这门课。请返回学业页下拉刷新。', textAlign: TextAlign.center),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     final sessions = [...course.sessions]..sort(
         (a, b) => (a.time.firstOrNull ?? 0).compareTo(b.time.firstOrNull ?? 0));
 
@@ -29,7 +70,10 @@ class CourseDetailPage extends StatelessWidget {
           CupertinoColors.systemGroupedBackground.resolveFrom(context),
       child: CustomScrollView(
         slivers: [
-          const CelechronSliverTextHeader(subtitle: '课程详情'),
+          const CelechronSliverTextHeader(
+            subtitle: '课程详情',
+            transitionBetweenRoutes: false,
+          ),
           SliverSafeArea(
             top: false,
             minimum: const EdgeInsets.fromLTRB(16, 4, 16, 20),

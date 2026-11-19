@@ -19,9 +19,27 @@ class MainActivity: FlutterActivity() {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "top.celechron.celechron/ecardWidget").setMethodCallHandler {
                 call, result ->
-            CoroutineScope(Dispatchers.Main).launch {
-                ECardWidget().updateAll(this@MainActivity)
+            val refresh = when (call.method) {
+                "update", "logout" -> true
+                "setAppearance" -> {
+                    val mode = call.arguments as? String
+                    if (mode == null || mode !in listOf("system", "light", "dark")) {
+                        result.error("invalid_appearance", "Unknown widget appearance", null)
+                        return@setMethodCallHandler
+                    }
+                    ECardWidget.setBrightness(this, mode)
+                }
+                else -> {
+                    result.notImplemented()
+                    return@setMethodCallHandler
+                }
             }
+            if (refresh) {
+                CoroutineScope(Dispatchers.Main).launch {
+                    ECardWidget().updateAll(this@MainActivity)
+                }
+            }
+            result.success(null)
         }
     }
 }

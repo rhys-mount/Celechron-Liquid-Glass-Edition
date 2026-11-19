@@ -4,6 +4,5 @@
                     android:minHeight="40dp"
                     android:updatePeriodMillis="3600000"
                     android:resizeMode="horizontal|vertical"
-                    android:previewImage="@drawable/ecard_widget_preview"
 >
 </appwidget-provider>

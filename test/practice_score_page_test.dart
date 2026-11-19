@@ -85,6 +85,20 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('实践项目详情'), findsOneWidget);
     expect(find.text('虚构项目 2'), findsOneWidget);
+    final firstLabel = tester.getTopLeft(find.text('项目名称'));
+    for (final label in ['获得记点', '参与身份或得分原因', '情况说明']) {
+      expect(tester.getTopLeft(find.text(label)).dx, firstLabel.dx);
+    }
+    expect(tester.getTopLeft(find.text('虚构项目 2')).dy, firstLabel.dy);
+    for (final (label, value) in [
+      ('参与身份或得分原因', '项目成员'),
+      ('情况说明', '虚构情况说明'),
+    ]) {
+      final left = tester.getTopLeft(find.text(label));
+      final right = tester.getTopLeft(find.text(value));
+      expect(right.dx, greaterThan(left.dx));
+      expect(right.dy, left.dy);
+    }
   });
 
   testWidgets('仅有 ZDBK 汇总时显示暂无项目明细', (tester) async {
@@ -100,7 +114,7 @@ void main() {
       ),
     );
     expect(
-      find.text('当前仅获取到旧实践汇总，暂无 getSqjl 项目明细。'),
+      find.text('目前只有旧版实践汇总，没有项目明细。'),
       findsOneWidget,
     );
   });
