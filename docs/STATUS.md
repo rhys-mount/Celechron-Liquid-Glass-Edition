@@ -198,3 +198,9 @@ API 36 模拟器在 Debug 模式载入 20 条任务和 18 条日程后，进入�
 - 用户已在 Android 真机试用当前界面版本，反馈无明显问题。该反馈针对试用包，Edition 发行包单独核验签名。
 - 云端 Edition 检查已能运行 Android SDK 安装器。修复默认安装的旧 SDK `tools` 包已下架的问题，改为显式安装目标平台、构建工具、NDK 和 platform-tools。
 - 官方版使用其原有签名。Edition 建立独立的长期签名，同一签名下的后续 Edition APK 支持覆盖升级。
+
+## 2026-11-20 · GitHub Android 预发布上线
+
+- [Edition 1.3.1 Android 预发布](https://github.com/rhys-mount/Celechron/releases/tag/edition-v1.3.1-preview.2) 已发布，源码标签对应 `88cb540`。
+- ARM64、ARMv7、x86_64 Release APK 在本机使用同一套 Edition 密钥签名，逐包通过 `apksigner`、ABI 与 16 KB ZIP 对齐检查。三个 APK 和校验和文件在公开前均已比对 GitHub 附件 SHA-256。发行密钥与加密密码保存在本机 Windows 账户的签名目录。
+- [Edition 云端检查](https://github.com/rhys-mount/Celechron/actions/runs/44672206223) 通过，覆盖锁定依赖、静态分析、151 项回归和 Android Debug 构建。真机反馈来自此前试用包。
