@@ -1,0 +1,13 @@
+// The Flutter included build resolves its plugins separately from android/settings.gradle.
+def flutterRoot = System.getenv("FLUTTER_ROOT")
+if (flutterRoot) {
+    def flutterGradle = new File(flutterRoot, "packages/flutter_tools/gradle").canonicalFile
+    gradle.beforeSettings { settings ->
+        if (settings.settingsDir.canonicalFile == flutterGradle) {
+            settings.pluginManagement.repositories {
+                mavenCentral()
+                gradlePluginPortal()
+            }
+        }
+    }
+}
