@@ -20,7 +20,7 @@
 
 [查看最新正式版与校验文件](https://github.com/rhys-mount/Celechron-Liquid-Glass-Edition/releases/latest)
 
-本仓库发布的 `1.3.1-preview.2` 可直接覆盖升级。官方 Celechron 和开发签名试用包使用不同签名，Android 无法直接覆盖。切换到 Edition 前，请先保存需要保留的本地数据。
+本仓库发布的 `1.3.1-preview.2` 可直接覆盖升级。官方 Celechron、早期独立仓库的版本及开发签名试用包使用不同签名，Android 无法直接覆盖。切换到 Edition 前，请先保存需要保留的本地数据。
 
 ## 🍷 Liquid Glass Edition
 

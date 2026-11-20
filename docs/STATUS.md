@@ -204,3 +204,11 @@ API 36 模拟器在 Debug 模式载入 20 条任务和 18 条日程后，进入�
 - [Edition 1.3.1 Android 预发布](https://github.com/rhys-mount/Celechron/releases/tag/edition-v1.3.1-preview.2) 已发布，源码标签对应 `88cb540`。
 - ARM64、ARMv7、x86_64 Release APK 在本机使用同一套 Edition 密钥签名，逐包通过 `apksigner`、ABI 与 16 KB ZIP 对齐检查。三个 APK 和校验和文件在公开前均已比对 GitHub 附件 SHA-256。发行密钥与加密密码保存在本机 Windows 账户的签名目录。
 - [Edition 云端检查](https://github.com/rhys-mount/Celechron/actions/runs/44672206223) 通过，覆盖锁定依赖、静态分析、151 项回归和 Android Debug 构建。真机反馈来自此前试用包。
+
+## 2026-11-20 · Android 1.3.1 正式版
+
+- GitHub Fork 更名为 [Celechron-Liquid-Glass-Edition](https://github.com/rhys-mount/Celechron-Liquid-Glass-Edition)。`liquid-glass` 成为默认分支，首页 README 提供安装包、构建方式和上游同步说明。`main` 与官方 `main` 均指向 `724e54a`。
+- 正式版源码标签为 `edition-v1.3.1`，对应 `00436d3`。本机和 [GitHub Actions](https://github.com/rhys-mount/Celechron-Liquid-Glass-Edition/actions/runs/44675075945) 的 151 项 Flutter 测试均通过。云端还通过依赖锁定、静态分析和 Android Debug 构建。
+- ARM64、ARMv7 和 x86-64 正式 APK 沿用 Edition 发行证书，版本码分别为 `2002`、`1002` 和 `4002`，通过签名、ABI 和 16 KB ZIP 对齐检查。Android 16 x86-64 模拟器实测从公开预发布包覆盖安装，版本码由 `4001` 升至 `4002`，首次安装时间保留，且升级后可进入应用主界面。
+- 官方程序与 Edition 的发行证书不同。另核对了旧独立仓库公开的 APK，其包名相同，签名也与本次发行不同。
+- [Android 1.3.1 正式发布页](https://github.com/rhys-mount/Celechron-Liquid-Glass-Edition/releases/tag/edition-v1.3.1) 已公开并标为最新正式版。三个 APK 和 `SHA256SUMS.txt` 的 GitHub 附件摘要与本机文件一致。
