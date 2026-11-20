@@ -192,3 +192,9 @@ API 36 模拟器在 Debug 模式载入 20 条任务和 18 条日程后，进入�
 - 已将验收后的源码推送到目标 Fork 的 `liquid-glass` 分支。Fork 的 `main` 与官方基线 `724e54a` 对齐，后续可用独立 PR 合并官方更新。
 - 本机 151 项测试通过，CI 同等静态分析无错误或警告。首次远端检查发现托管环境缺少 Android 命令行工具，Edition 工作流现已显式配置该工具。
 - Android 预发布标签先检验仓库的 Edition 签名配置，再构建三个 ABI。证书校验成功后，将 APK 附到同标签的 GitHub 预发布。
+
+## 2026-11-20 · 真机反馈与 Android 发布检查
+
+- 用户已在 Android 真机试用当前界面版本，反馈无明显问题。该反馈针对试用包，Edition 发行包单独核验签名。
+- 云端 Edition 检查已能运行 Android SDK 安装器。修复默认安装的旧 SDK `tools` 包已下架的问题，改为显式安装目标平台、构建工具、NDK 和 platform-tools。
+- 官方版使用其原有签名。Edition 建立独立的长期签名，同一签名下的后续 Edition APK 支持覆盖升级。

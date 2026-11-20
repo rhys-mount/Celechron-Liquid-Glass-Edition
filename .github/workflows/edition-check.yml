@@ -25,7 +25,8 @@ jobs:
           channel: stable
           cache: true
       - uses: android-actions/setup-android@v3
-      - run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0' 'ndk;28.2.13676358'
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0 ndk;28.2.13676358'
       - run: flutter pub get --enforce-lockfile
       - run: flutter analyze --no-pub --no-fatal-infos
       - run: flutter test --no-pub
