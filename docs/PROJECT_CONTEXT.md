@@ -50,7 +50,7 @@ Android 优先 · Apple 原生设计语言 · 业务功能完整保留 · 长期
 | 仓库                                                                                                   | 作用          |
 | ---------------------------------------------------------------------------------------------------- | ----------- |
 | [Celechron/Celechron](https://github.com/Celechron/Celechron?utm_source=chatgpt.com)                 | 唯一官方上游代码基线  |
-| [rhys-mount/Celechron](https://github.com/rhys-mount/Celechron?utm_source=chatgpt.com)               | 新版正式 Fork   |
+| [Celechron Liquid Glass Edition](https://github.com/rhys-mount/Celechron-Liquid-Glass-Edition)    | 新版正式 Fork   |
 | [旧版 Liquid Glass](https://github.com/rhys-mount/Celechron-1.3.1-liquid-glass?utm_source=chatgpt.com) | 仅供设计参考和问题排查 |
 
 旧版本曾使用 `liquid_glass_widgets 1.5.0` 的本地路径依赖，并且混合修改了 UI、主题、业务交互、Android 构建与图标。
@@ -61,7 +61,7 @@ Android 优先 · Apple 原生设计语言 · 业务功能完整保留 · 长期
 
 `main`：官方同步分支
 
-`liquid-glass`：自己的稳定版本
+`liquid-glass`：Edition 稳定版本和 GitHub 默认分支
 
 `feat/*`：独立开发分支
 

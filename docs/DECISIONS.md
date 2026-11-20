@@ -145,3 +145,9 @@ API 36 模拟器下，Debug 包切换到含 20 条任务和 18 条日程的任�
 ## 2026-11-20 · Edition 本地发行签名
 
 Edition 发行密钥由本机 Windows 账户保管。公开预发布使用 `edition-v*` 源码标签，上传本机签名且证书匹配的 APK，并在发布前核对 GitHub 的附件摘要。后续 Edition APK 沿用这一证书与分 ABI 的递增版本号。
+
+## 2026-11-20 · 正式仓库与版本入口
+
+正式 Fork 使用 `rhys-mount/Celechron-Liquid-Glass-Edition`。GitHub 默认打开 `liquid-glass`，以便在仓库首页展示 Edition 说明和安装入口。`main` 继续快进同步官方上游，更新通过独立 PR 合并到 `liquid-glass`。
+
+首个 Android 正式版使用 `edition-v1.3.1` 标签及 Flutter 构建号 `2`。发行签名沿用 `edition-v1.3.1-preview.2`，按架构递增 Android 版本码，使预发布安装可以就地更新。

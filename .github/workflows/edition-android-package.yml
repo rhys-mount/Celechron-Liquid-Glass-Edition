@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   android:
-    if: github.repository == 'rhys-mount/Celechron'
+    if: github.repository == 'rhys-mount/Celechron-Liquid-Glass-Edition'
     runs-on: ubuntu-24.04
     steps:
       - name: Check Edition signing configuration
@@ -89,7 +89,7 @@ jobs:
           if-no-files-found: error
 
   publish-preview:
-    if: github.repository == 'rhys-mount/Celechron' && contains(github.ref_name, '-preview.')
+    if: github.repository == 'rhys-mount/Celechron-Liquid-Glass-Edition' && contains(github.ref_name, '-preview.')
     needs: android
     runs-on: ubuntu-24.04
     permissions:
